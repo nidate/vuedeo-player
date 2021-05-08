@@ -2,12 +2,12 @@
 
 import { app, protocol, BrowserWindow } from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
-import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
+import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer';
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'app', privileges: { secure: true, standard: true } }
+  { scheme: 'app', privileges: { secure: true, standard: true, stream: true } }
 ]);
 
 async function createWindow() {
@@ -16,6 +16,7 @@ async function createWindow() {
     width: 800,
     height: 600,
     webPreferences: {
+      contextIsolation: true,
       // Use pluginOptions.nodeIntegration, leave this alone
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION
@@ -55,13 +56,30 @@ app.on('ready', async () => {
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools
     try {
-      await installExtension(VUEJS_DEVTOOLS);
+      await installExtension(VUEJS3_DEVTOOLS);
     } catch (e) {
       console.error('Vue Devtools failed to install:', e.toString());
     }
   }
+  registerLocalResourceProtocol();
   createWindow();
 });
+
+function registerLocalResourceProtocol() {
+  protocol.registerFileProtocol('local-resource', (request, callback) => {
+    const url = request.url.replace(/^local-resource:\/\//, '');
+    // Decode URL to prevent errors when loading filenames with UTF-8 chars or chars like "#"
+    const decodedUrl = decodeURI(url); // Needed in case URL contains spaces
+    try {
+      return callback(decodedUrl);
+    } catch (error) {
+      console.error(
+        'ERROR: registerLocalResourceProtocol: Could not get file path:',
+        error
+      );
+    }
+  });
+}
 
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
