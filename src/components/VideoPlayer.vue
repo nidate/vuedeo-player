@@ -39,24 +39,31 @@ export default {
   methods: {
     playerReady() {
       this.ready = true;
-      this.player.on('loadeddata', e => {
-        console.log(e);
-        this.aspectChanged();
+      this.player.on('loadeddata', () => {
+        this.loadedData();
       });
-      this.player.on('componentresize', e => {
-        console.log(e);
-      });
-      this.player.on('ready', e => {
-        console.log(e);
-      });
+      this.player.on('componentresize', () => {});
+      this.player.on('ready', () => {});
     },
-    aspectChanged() {
-      window.electron.changeAspect(this.aspectRatio);
+    loadedData() {
+      window.electron.send('loaded-data', {});
+    },
+    loadMedia(file) {
+      this.player.loadMedia({ src: `local-resource://${file}` }, e => {
+        console.log(e);
+      });
     }
   },
   mounted() {
     this.player = videojs(this.$refs.videoPlayer, this.options, () => {
       this.playerReady();
+    });
+    // fixme イベントを定数に
+    window.electron.on('open-file', files => {
+      console.log(files);
+      if (files && files.length) {
+        this.loadMedia(files[0]);
+      }
     });
   },
   beforeUnmount() {

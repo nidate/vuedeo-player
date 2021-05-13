@@ -1,7 +1,7 @@
 'use strict';
 
 import path from 'path';
-import { app, protocol, BrowserWindow, ipcMain } from 'electron';
+import { app, protocol, BrowserWindow, ipcMain, Menu, dialog } from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer';
 const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -10,36 +10,6 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true, stream: true } }
 ]);
-
-async function createWindow() {
-  // Create the browser window.
-  const win = new BrowserWindow({
-    width: 1280,
-    height: 720,
-    backgroundColor: '#cfcfcf',
-    webPreferences: {
-      contextIsolation: true,
-      nodeIntegration: false,
-      preload: path.join(__dirname, 'preload.js')
-    }
-  });
-  ipcMain.on('aspect-changed', function(event, ratio) {
-    //win.setAspectRatio(ratio);
-    const [width, height] = win.getSize();
-    //win.setSize(width, parseInt(width / ratio, 10));
-  });
-
-  if (process.env.WEBPACK_DEV_SERVER_URL) {
-    // Load the url of the dev server if in development mode
-    await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
-    if (!process.env.IS_TEST) win.webContents.openDevTools({ mode: 'detach' });
-  } else {
-    createProtocol('app');
-    // Load the index.html when not in development
-    win.loadURL('app://./index.html');
-  }
-}
-
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
   // On macOS it is common for applications and their menu bar
@@ -71,6 +41,21 @@ app.on('ready', async () => {
   createWindow();
 });
 
+// Exit cleanly on request from parent process in development mode.
+if (isDevelopment) {
+  if (process.platform === 'win32') {
+    process.on('message', data => {
+      if (data === 'graceful-exit') {
+        app.quit();
+      }
+    });
+  } else {
+    process.on('SIGTERM', () => {
+      app.quit();
+    });
+  }
+}
+
 function registerLocalResourceProtocol() {
   protocol.registerFileProtocol('local-resource', (request, callback) => {
     const url = request.url.replace(/^local-resource:\/\//, '');
@@ -87,17 +72,96 @@ function registerLocalResourceProtocol() {
   });
 }
 
-// Exit cleanly on request from parent process in development mode.
-if (isDevelopment) {
-  if (process.platform === 'win32') {
-    process.on('message', data => {
-      if (data === 'graceful-exit') {
-        app.quit();
-      }
-    });
+async function createWindow() {
+  // Create the browser window.
+  const win = new BrowserWindow({
+    width: 1280,
+    height: 720,
+    backgroundColor: '#cfcfcf',
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      preload: path.join(__dirname, 'preload.js')
+    }
+  });
+  createMenu();
+  ipcMain.on('loaded-data', function(event, params) {
+    //console.log(event);
+    //console.log(ratio);
+  });
+
+  if (process.env.WEBPACK_DEV_SERVER_URL) {
+    await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
+    if (!process.env.IS_TEST) win.webContents.openDevTools({ mode: 'detach' });
   } else {
-    process.on('SIGTERM', () => {
-      app.quit();
-    });
+    createProtocol('app');
+    win.loadURL('app://./index.html');
   }
+}
+
+function createMenu() {
+  const template = [
+    {
+      label: app.name,
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        {
+          label: 'Preference',
+          accelerator: 'CmdOrCtrl+,'
+        },
+        { type: 'separator' },
+        { role: 'quit' }
+      ]
+    },
+    {
+      label: 'File',
+      submenu: [
+        {
+          label: 'Open',
+          accelerator: 'CmdOrCtrl+o',
+          click: function(item, win) {
+            openFile(win);
+          }
+        },
+        {
+          label: 'New Window',
+          accelerator: 'CmdOrCtrl+n'
+        },
+        { role: 'close' },
+        { type: 'separator' },
+        { role: 'quit' }
+      ]
+    },
+    {
+      label: 'Window',
+      submenu: [
+        {
+          role: 'hide'
+        },
+        {
+          role: 'zoom'
+        },
+        { type: 'separator' }
+        // todo 開いているウィンドウ
+      ]
+    }
+  ];
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}
+
+function openFile(win) {
+  dialog
+    .showOpenDialog(win)
+    .then(({ canceled, filePaths }) => {
+      if (canceled) {
+        return;
+      }
+      // fixme イベントを定数に
+      win.webContents.send('open-file', filePaths);
+    })
+    .catch(err => {
+      console.error(err);
+    });
 }
