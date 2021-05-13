@@ -27,14 +27,37 @@ export default {
       }
     };
   },
-  mounted() {
-    this.player = videojs(
-      this.$refs.videoPlayer,
-      this.options,
-      function onPlayerReady() {
-        console.log('onPlayerReady', this);
+  computed: {
+    aspectRatio() {
+      const dimensions = this.player.currentDimensions();
+      if (!(dimensions && dimensions.width && dimensions.height)) {
+        return 16 / 9;
       }
-    );
+      return dimensions.width / dimensions.height;
+    }
+  },
+  methods: {
+    playerReady() {
+      this.ready = true;
+      this.player.on('loadeddata', e => {
+        console.log(e);
+        this.aspectChanged();
+      });
+      this.player.on('componentresize', e => {
+        console.log(e);
+      });
+      this.player.on('ready', e => {
+        console.log(e);
+      });
+    },
+    aspectChanged() {
+      window.electron.changeAspect(this.aspectRatio);
+    }
+  },
+  mounted() {
+    this.player = videojs(this.$refs.videoPlayer, this.options, () => {
+      this.playerReady();
+    });
   },
   beforeUnmount() {
     if (this.player) {

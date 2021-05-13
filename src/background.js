@@ -1,6 +1,7 @@
 'use strict';
 
-import { app, protocol, BrowserWindow } from 'electron';
+import path from 'path';
+import { app, protocol, BrowserWindow, ipcMain } from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer';
 const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -18,10 +19,14 @@ async function createWindow() {
     backgroundColor: '#cfcfcf',
     webPreferences: {
       contextIsolation: true,
-      // Use pluginOptions.nodeIntegration, leave this alone
-      // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
-      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION
+      nodeIntegration: false,
+      preload: path.join(__dirname, 'preload.js')
     }
+  });
+  ipcMain.on('aspect-changed', function(event, ratio) {
+    //win.setAspectRatio(ratio);
+    const [width, height] = win.getSize();
+    //win.setSize(width, parseInt(width / ratio, 10));
   });
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
