@@ -13,6 +13,9 @@ export default {
     return {
       player: null,
       options: {
+        fluid: true,
+        fill: true,
+        responsive: true,
         controls: true,
         sources: [
           {
