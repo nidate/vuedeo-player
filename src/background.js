@@ -92,12 +92,15 @@ async function openWindow() {
       preload: path.join(__dirname, 'preload.js')
     }
   });
-  if (process.env.WEBPACK_DEV_SERVER_URL) {
-    await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
-    if (!process.env.IS_TEST) win.webContents.openDevTools({ mode: 'detach' });
-  } else {
-    // todo handle video file
-    win.loadURL('app://./index.html');
+
+  let url = process.env.WEBPACK_DEV_SERVER_URL || 'app://./index.html';
+  await win.loadURL(url);
+
+  const file = '/Users/kunix/Documents/dev/vplayer/src/assets/video.mp4';
+  win.webContents.send('open-file', [file]);
+
+  if (process.env.WEBPACK_DEV_SERVER_URL && !process.env.IS_TEST) {
+    win.webContents.openDevTools({ mode: 'detach' });
   }
 }
 

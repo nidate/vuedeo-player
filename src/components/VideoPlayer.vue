@@ -6,6 +6,7 @@
 <style src="video.js/dist/video-js.css"></style>
 <script>
 import videojs from 'video.js';
+import { extname } from 'path';
 
 export default {
   name: 'VideoPlayer',
@@ -17,13 +18,7 @@ export default {
         fill: true,
         responsive: true,
         controls: true,
-        sources: [
-          {
-            src:
-              'local-resource:///Users/kunix/Documents/dev/vplayer/src/assets/video.mp4',
-            type: 'video/mp4'
-          }
-        ]
+        sources: []
       }
     };
   },
@@ -38,32 +33,41 @@ export default {
   },
   methods: {
     playerReady() {
+      console.log('playerReady');
       this.ready = true;
       this.player.on('loadeddata', () => {
+        console.log('loaded');
         this.loadedData();
       });
       this.player.on('componentresize', () => {});
-      this.player.on('ready', () => {});
+      this.player.on('ready', () => {
+        console.log('ready');
+      });
     },
     loadedData() {
       window.electron.send('loaded-data', {});
     },
-    loadMedia(file) {
-      this.player.loadMedia({ src: `local-resource://${file}` }, e => {
-        console.log(e);
-      });
+    load(file) {
+      console.log('load');
+      const ext = extname(file).toLowerCase();
+      let type = 'video/mp4';
+      if (ext === '.mp4') {
+        type = 'video/mp4';
+      }
+      this.player.src({ src: `local-resource://${file}`, type });
+      this.player.load();
     }
   },
   mounted() {
+    console.log('mounted');
     this.player = videojs(this.$refs.videoPlayer, this.options, () => {
       this.playerReady();
-    });
-    // fixme イベントを定数に
-    window.electron.on('open-file', files => {
-      console.log(files);
-      if (files && files.length) {
-        this.loadMedia(files[0]);
-      }
+      // fixme イベントを定数に
+      window.electron.on('open-file', files => {
+        if (files && files.length) {
+          this.load(files[0]);
+        }
+      });
     });
   },
   beforeUnmount() {
