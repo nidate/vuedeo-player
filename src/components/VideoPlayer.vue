@@ -23,15 +23,7 @@ export default {
       }
     };
   },
-  computed: {
-    aspectRatio() {
-      const dimensions = this.player.currentDimensions();
-      if (!(dimensions && dimensions.width && dimensions.height)) {
-        return 16 / 9;
-      }
-      return dimensions.width / dimensions.height;
-    }
-  },
+  computed: {},
   methods: {
     playerReady() {
       console.log('playerReady');
@@ -45,7 +37,13 @@ export default {
       });
     },
     loadedData() {
-      window.electron.send('loaded-data', {});
+      const dimensions = this.player.currentDimensions();
+      window.electron.send('resize-window', {
+        width: Math.ceil(dimensions.width),
+        height: Math.ceil(dimensions.height),
+        // fixme compute controller's mergin
+        merginHeight: 20
+      });
     },
     load(file) {
       console.log('load');

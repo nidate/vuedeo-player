@@ -83,8 +83,8 @@ function registerLocalResourceProtocol() {
 async function openWindow() {
   // Create the browser window.
   const win = new BrowserWindow({
-    width: 1280,
-    height: 720,
+    width: 640,
+    height: 360,
     backgroundColor: '#cfcfcf',
     webPreferences: {
       contextIsolation: true,
@@ -102,7 +102,19 @@ async function openWindow() {
   if (process.env.WEBPACK_DEV_SERVER_URL && !process.env.IS_TEST) {
     win.webContents.openDevTools({ mode: 'detach' });
   }
+
+  return win;
 }
+
+ipcMain.on('resize-window', (event, { width, height, merginHeight = 0 }) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  console.log(win);
+  if (!win) {
+    return;
+  }
+  win.setSize(width, height + merginHeight);
+  win.setAspectRatio(width / height);
+});
 
 function createMenu() {
   const template = [
@@ -126,7 +138,12 @@ function createMenu() {
           label: 'Open',
           accelerator: 'CmdOrCtrl+o',
           click: function(item, win) {
-            openFile(win);
+            openFile(win).then(
+              () => {},
+              err => {
+                console.error(err);
+              }
+            );
           }
         },
         {
@@ -164,17 +181,15 @@ ipcMain.on('loaded-data', function(event, params) {
   //console.log(ratio);
 });
 
-function openFile(win) {
-  dialog
-    .showOpenDialog(win)
-    .then(({ canceled, filePaths }) => {
-      if (canceled) {
-        return;
-      }
-      // fixme イベントを定数に
-      win.webContents.send('open-file', filePaths);
-    })
-    .catch(err => {
-      console.error(err);
-    });
+async function openFile(win) {
+  if (!win) {
+    win = await openWindow();
+  }
+
+  const { canceled, filePaths } = await dialog.showOpenDialog(win);
+  if (canceled) {
+    return;
+  }
+  // fixme イベントを定数に
+  win.webContents.send('open-file', filePaths);
 }
