@@ -6,6 +6,7 @@
 <style src="video.js/dist/video-js.css"></style>
 <script>
 import videojs from 'video.js';
+import 'videojs-hotkeys';
 import { extname } from 'path';
 
 export default {
@@ -36,7 +37,6 @@ export default {
       console.log('playerReady');
       this.ready = true;
       this.player.on('loadeddata', () => {
-        console.log('loaded');
         this.loadedData();
       });
       this.player.on('componentresize', () => {});
@@ -61,6 +61,7 @@ export default {
   mounted() {
     console.log('mounted');
     this.player = videojs(this.$refs.videoPlayer, this.options, () => {
+      this.player.hotkeys();
       this.playerReady();
       // fixme イベントを定数に
       window.electron.on('open-file', files => {
