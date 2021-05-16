@@ -22,7 +22,7 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  if (BrowserWindow.getAllWindows().length === 0) openWindow();
 });
 
 // This method will be called when Electron has finished
@@ -40,7 +40,7 @@ app.on('ready', async () => {
   createProtocol('app');
   registerLocalResourceProtocol();
   createMenu();
-  createWindow();
+  openWindow();
 });
 
 // Exit cleanly on request from parent process in development mode.
@@ -80,7 +80,7 @@ function registerLocalResourceProtocol() {
   });
 }
 
-async function createWindow() {
+async function openWindow() {
   // Create the browser window.
   const win = new BrowserWindow({
     width: 1280,
@@ -128,7 +128,10 @@ function createMenu() {
         },
         {
           label: 'New Window',
-          accelerator: 'CmdOrCtrl+n'
+          accelerator: 'CmdOrCtrl+n',
+          click: function(item, win) {
+            openWindow();
+          }
         },
         { role: 'close' },
         { type: 'separator' },
