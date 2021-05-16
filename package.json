@@ -14,6 +14,7 @@
   "main": "background.js",
   "dependencies": {
     "core-js": "^3.6.5",
+    "videojs-hotkeys": "^0.2.27",
     "vue": "^3.0.0"
   },
   "devDependencies": {
