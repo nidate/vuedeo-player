@@ -37,7 +37,9 @@ app.on('ready', async () => {
       console.error('Vue Devtools failed to install:', e.toString());
     }
   }
+  createProtocol('app');
   registerLocalResourceProtocol();
+  createMenu();
   createWindow();
 });
 
@@ -61,8 +63,14 @@ function registerLocalResourceProtocol() {
     const url = request.url.replace(/^local-resource:\/\//, '');
     // Decode URL to prevent errors when loading filenames with UTF-8 chars or chars like "#"
     const decodedUrl = decodeURI(url); // Needed in case URL contains spaces
+
+    const extension = path.extname(decodedUrl).toLowerCase();
+    let mimeType = 'video/mp4';
+    if (extension === '.mp4') {
+      mimeType = 'video/mp4';
+    }
     try {
-      return callback(decodedUrl);
+      return callback({ path: decodedUrl, mimeType });
     } catch (error) {
       console.error(
         'ERROR: registerLocalResourceProtocol: Could not get file path:',
@@ -84,17 +92,11 @@ async function createWindow() {
       preload: path.join(__dirname, 'preload.js')
     }
   });
-  createMenu();
-  ipcMain.on('loaded-data', function(event, params) {
-    //console.log(event);
-    //console.log(ratio);
-  });
-
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
     if (!process.env.IS_TEST) win.webContents.openDevTools({ mode: 'detach' });
   } else {
-    createProtocol('app');
+    // todo handle video file
     win.loadURL('app://./index.html');
   }
 }
@@ -150,6 +152,11 @@ function createMenu() {
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
 }
+
+ipcMain.on('loaded-data', function(event, params) {
+  //console.log(event);
+  //console.log(ratio);
+});
 
 function openFile(win) {
   dialog
