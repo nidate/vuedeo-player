@@ -8,6 +8,7 @@
 import videojs from 'video.js';
 import 'videojs-hotkeys';
 import { extname } from 'path';
+import { RESIZE_WINDOW, OPEN_FILE } from '../events';
 
 export default {
   name: 'VideoPlayer',
@@ -38,11 +39,11 @@ export default {
     },
     loadedData() {
       const dimensions = this.player.currentDimensions();
-      window.electron.send('resize-window', {
+      window.electron.send(RESIZE_WINDOW, {
         width: Math.ceil(dimensions.width),
         height: Math.ceil(dimensions.height),
         // fixme compute controller's mergin
-        merginHeight: 20
+        merginHeight: 21
       });
     },
     load(file) {
@@ -61,8 +62,7 @@ export default {
     this.player = videojs(this.$refs.videoPlayer, this.options, () => {
       this.player.hotkeys();
       this.playerReady();
-      // fixme イベントを定数に
-      window.electron.on('open-file', files => {
+      window.electron.on(OPEN_FILE, files => {
         if (files && files.length) {
           this.load(files[0]);
         }

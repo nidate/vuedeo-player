@@ -5,6 +5,7 @@ import { app, protocol, BrowserWindow, ipcMain, Menu, dialog } from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer';
 const isDevelopment = process.env.NODE_ENV !== 'production';
+import { RESIZE_WINDOW, LOADED_DATA, OPEN_FILE } from './events';
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -106,9 +107,8 @@ async function openWindow() {
   return win;
 }
 
-ipcMain.on('resize-window', (event, { width, height, merginHeight = 0 }) => {
+ipcMain.on(RESIZE_WINDOW, (event, { width, height, merginHeight = 0 }) => {
   const win = BrowserWindow.fromWebContents(event.sender);
-  console.log(win);
   if (!win) {
     return;
   }
@@ -176,9 +176,9 @@ function createMenu() {
   Menu.setApplicationMenu(menu);
 }
 
-ipcMain.on('loaded-data', function(event, params) {
+ipcMain.on(LOADED_DATA, function(event, params) {
   //console.log(event);
-  //console.log(ratio);
+  //console.log(params);
 });
 
 async function openFile(win) {
@@ -190,6 +190,5 @@ async function openFile(win) {
   if (canceled) {
     return;
   }
-  // fixme イベントを定数に
-  win.webContents.send('open-file', filePaths);
+  win.webContents.send(OPEN_FILE, filePaths);
 }
