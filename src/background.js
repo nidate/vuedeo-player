@@ -5,7 +5,7 @@ import { app, protocol, BrowserWindow, ipcMain, Menu, dialog } from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer';
 const isDevelopment = process.env.NODE_ENV !== 'production';
-import { RESIZE_WINDOW, LOADED_DATA, OPEN_FILE } from './events';
+import { RESIZE_WINDOW, CLOSE_WINDOW, LOADED_DATA, OPEN_FILE } from './events';
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -114,6 +114,14 @@ ipcMain.on(RESIZE_WINDOW, (event, { width, height, merginHeight = 0 }) => {
   }
   win.setSize(width, height + merginHeight);
   win.setAspectRatio(width / height);
+});
+
+ipcMain.on(CLOSE_WINDOW, event => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) {
+    return;
+  }
+  win.close();
 });
 
 function createMenu() {
