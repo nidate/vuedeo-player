@@ -26,6 +26,7 @@ export default {
   },
   computed: {},
   methods: {
+    // called after videojs initialized
     playerReady() {
       console.log('playerReady');
       this.ready = true;
@@ -36,8 +37,14 @@ export default {
       this.player.on('ready', () => {
         console.log('ready');
       });
+      window.electron.on(OPEN_FILE, files => {
+        if (files && files.length) {
+          this.load(files[0]);
+        }
+      });
     },
     loadedData() {
+      // resize window size
       const dimensions = this.player.currentDimensions();
       window.electron.send(RESIZE_WINDOW, {
         width: Math.ceil(dimensions.width),
@@ -58,15 +65,11 @@ export default {
     }
   },
   mounted() {
-    console.log('mounted');
     this.player = videojs(this.$refs.videoPlayer, this.options, () => {
       this.player.hotkeys();
-      this.playerReady();
-      window.electron.on(OPEN_FILE, files => {
-        if (files && files.length) {
-          this.load(files[0]);
         }
       });
+      this.playerReady();
     });
   },
   beforeUnmount() {
