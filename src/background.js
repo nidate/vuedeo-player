@@ -26,6 +26,20 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) openWindow();
 });
 
+let initOpenFileQueue = [];
+app.on('will-finish-launching', () => {
+  app.on('open-file', (event, file) => {
+    console.log(event);
+    console.log(file);
+    if (app.isReady() === false) {
+      initOpenFileQueue.push(file);
+    } else {
+      openWindow(file);
+    }
+    event.preventDefault();
+  });
+});
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -41,7 +55,12 @@ app.on('ready', async () => {
   createProtocol('app');
   registerLocalResourceProtocol();
   createMenu();
-  openWindow();
+
+  if (initOpenFileQueue.length) {
+    initOpenFileQueue.forEach(file => openWindow(file));
+  } else {
+    openWindow();
+  }
 });
 
 // Exit cleanly on request from parent process in development mode.
