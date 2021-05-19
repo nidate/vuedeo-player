@@ -81,7 +81,7 @@ function registerLocalResourceProtocol() {
   });
 }
 
-async function openWindow() {
+async function openWindow(file) {
   // Create the browser window.
   const win = new BrowserWindow({
     width: 640,
@@ -97,8 +97,9 @@ async function openWindow() {
   let url = process.env.WEBPACK_DEV_SERVER_URL || 'app://./index.html';
   await win.loadURL(url);
 
-  const file = '/Users/kunix/Documents/dev/vplayer/src/assets/video.mp4';
-  win.webContents.send('open-file', [file]);
+  if (file) {
+    win.webContents.send(OPEN_FILE, file);
+  }
 
   if (process.env.WEBPACK_DEV_SERVER_URL && !process.env.IS_TEST) {
     win.webContents.openDevTools({ mode: 'detach' });
@@ -190,13 +191,17 @@ ipcMain.on(LOADED_DATA, function(event, params) {
 });
 
 async function openFile(win) {
-  if (!win) {
-    win = await openWindow();
-  }
-
-  const { canceled, filePaths } = await dialog.showOpenDialog(win);
+  const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+    properties: ['openFile', 'multiSelections']
+  });
   if (canceled) {
     return;
   }
-  win.webContents.send(OPEN_FILE, filePaths);
+  for (let i = 0; i < filePaths.length; i++) {
+    if (win && i == 0) {
+      win.webContents.send(OPEN_FILE, filePaths[0]);
+      continue;
+    }
+    openWindow(filePaths[i]);
+  }
 }

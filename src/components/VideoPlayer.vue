@@ -39,11 +39,7 @@ export default {
       this.player.on('ready', () => {
         console.log('ready');
       });
-      window.electron.on(OPEN_FILE, files => {
-        if (files && files.length) {
-          this.load(files[0]);
-        }
-      });
+      window.electron.on(OPEN_FILE, this.load);
     },
     loadedData() {
       // resize window size
