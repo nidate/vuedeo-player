@@ -5,7 +5,7 @@ import { app, protocol, BrowserWindow, ipcMain, Menu, dialog } from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer';
 const isDevelopment = process.env.NODE_ENV !== 'production';
-import { RESIZE_WINDOW, CLOSE_WINDOW, LOADED_DATA, OPEN_FILE } from './events';
+import { RESIZE_WINDOW, CLOSE_WINDOW, OPEN_FILE } from './events';
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -29,8 +29,6 @@ app.on('activate', () => {
 let initOpenFileQueue = [];
 app.on('will-finish-launching', () => {
   app.on('open-file', (event, file) => {
-    console.log(event);
-    console.log(file);
     if (app.isReady() === false) {
       initOpenFileQueue.push(file);
     } else {
@@ -100,18 +98,22 @@ function registerLocalResourceProtocol() {
   });
 }
 
-async function openWindow(file) {
-  // Create the browser window.
-  const win = new BrowserWindow({
-    width: 640,
-    height: 360,
-    backgroundColor: '#cfcfcf',
-    webPreferences: {
-      contextIsolation: true,
-      nodeIntegration: false,
-      preload: path.join(__dirname, 'preload.js')
-    }
-  });
+/**
+ * create the browser window and send open event to that window.
+ */
+async function openWindow({ win, file } = {}) {
+  if (!win) {
+    win = new BrowserWindow({
+      width: 640,
+      height: 360,
+      backgroundColor: '#cfcfcf',
+      webPreferences: {
+        contextIsolation: true,
+        nodeIntegration: false,
+        preload: path.join(__dirname, 'preload.js')
+      }
+    });
+  }
 
   let url = process.env.WEBPACK_DEV_SERVER_URL || 'app://./index.html';
   await win.loadURL(url);
@@ -166,7 +168,7 @@ function createMenu() {
           label: 'Open',
           accelerator: 'CmdOrCtrl+o',
           click: function(item, win) {
-            openFile(win).then(
+            openFileDialog(win).then(
               () => {},
               err => {
                 console.error(err);
@@ -177,7 +179,7 @@ function createMenu() {
         {
           label: 'New Window',
           accelerator: 'CmdOrCtrl+n',
-          click: function(item, win) {
+          click: function() {
             openWindow();
           }
         },
@@ -204,12 +206,10 @@ function createMenu() {
   Menu.setApplicationMenu(menu);
 }
 
-ipcMain.on(LOADED_DATA, function(event, params) {
-  //console.log(event);
-  //console.log(params);
-});
-
-async function openFile(win) {
+/**
+ * open file dialog and open window
+ */
+async function openFileDialog(win) {
   const { canceled, filePaths } = await dialog.showOpenDialog(win, {
     properties: ['openFile', 'multiSelections']
   });
@@ -218,9 +218,9 @@ async function openFile(win) {
   }
   for (let i = 0; i < filePaths.length; i++) {
     if (win && i == 0) {
-      win.webContents.send(OPEN_FILE, filePaths[0]);
+      openWindow({ win, file: filePaths[i] });
       continue;
     }
-    openWindow(filePaths[i]);
+    openWindow({ file: filePaths[i] });
   }
 }
