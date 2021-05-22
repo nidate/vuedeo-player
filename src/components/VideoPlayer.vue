@@ -72,7 +72,9 @@ export default {
       });
     },
     load({ file, hash, fileInfo }) {
-      // fixme ロードされていたものがあればsavePosition()で記録してから入れ替える。
+      // save last opend file position
+      this.savePosition();
+      // load new file
       this.file = file;
       this.hash = hash;
       this.fileInfo = fileInfo;
