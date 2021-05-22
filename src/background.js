@@ -5,7 +5,13 @@ import { app, protocol, BrowserWindow, ipcMain, Menu, dialog } from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer';
 const isDevelopment = process.env.NODE_ENV !== 'production';
-import { RESIZE_WINDOW, CLOSE_WINDOW, OPEN_FILE, STORE_DATA } from './events';
+import {
+  RESIZE_WINDOW,
+  CLOSE_WINDOW,
+  OPEN_FILE,
+  STORE_DATA,
+  OPEN_WINDOW
+} from './events';
 import hasha from 'hasha';
 import Store from 'electron-store';
 
@@ -118,28 +124,26 @@ async function openWindow({ win, file } = {}) {
       }
     });
   }
-
-  let url = process.env.WEBPACK_DEV_SERVER_URL || 'app://./index.html';
-  await win.loadURL(url);
-
-  if (file) {
-    const basename = path.basename(file);
-    const hash = await hasha.fromFile(file);
-
-    const fileInfo = store.get(hash, {});
-    fileInfo.name = basename;
-    store.set(hash, fileInfo);
-
-    win.webContents.send(OPEN_FILE, { file, hash, fileInfo });
-
-    win.setTitle(basename);
-    win.setRepresentedFilename(file);
-    win.setDocumentEdited(true);
-  }
-
   if (process.env.WEBPACK_DEV_SERVER_URL && !process.env.IS_TEST) {
     win.webContents.openDevTools({ mode: 'detach' });
   }
+  let url = process.env.WEBPACK_DEV_SERVER_URL || 'app://./index.html';
+  await win.loadURL(url);
+  if (!file) {
+    return win;
+  }
+
+  // get file information
+  const basename = path.basename(file);
+  const hash = await hasha.fromFile(file);
+  const fileInfo = store.get(hash, {});
+  fileInfo.name = basename;
+  store.set(hash, fileInfo);
+
+  win.webContents.send(OPEN_FILE, { file, hash, fileInfo });
+  win.setTitle(basename);
+  win.setRepresentedFilename(file);
+  win.setDocumentEdited(true);
 
   return win;
 }
@@ -163,6 +167,11 @@ ipcMain.on(CLOSE_WINDOW, event => {
 
 ipcMain.on(STORE_DATA, (event, { hash, key, value }) => {
   store.set(`${hash}.${key}`, value);
+});
+
+ipcMain.on(OPEN_WINDOW, (event, { files }) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  openFiles({ win, files });
 });
 
 function createMenu() {
@@ -235,11 +244,15 @@ async function openFileDialog(win) {
   if (canceled) {
     return;
   }
-  for (let i = 0; i < filePaths.length; i++) {
+  openFiles({ win, files: filePaths });
+}
+
+function openFiles({ win, files }) {
+  for (let i = 0; i < files.length; i++) {
     if (win && i == 0) {
-      openWindow({ win, file: filePaths[i] });
+      openWindow({ win, file: files[i] });
       continue;
     }
-    openWindow({ file: filePaths[i] });
+    openWindow({ file: files[i] });
   }
 }

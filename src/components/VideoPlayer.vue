@@ -1,5 +1,10 @@
 <template>
-  <div v-on:keydown="keydown">
+  <div
+    v-on:keydown="keydown"
+    v-on:drop="dropFiles"
+    v-on:dragenter.prevent
+    v-on:dragover.prevent
+  >
     <video ref="videoPlayer" class="video-js"></video>
   </div>
 </template>
@@ -8,7 +13,13 @@
 import videojs from 'video.js';
 import 'videojs-hotkeys';
 import { extname } from 'path';
-import { RESIZE_WINDOW, CLOSE_WINDOW, OPEN_FILE, STORE_DATA } from '../events';
+import {
+  OPEN_WINDOW,
+  RESIZE_WINDOW,
+  CLOSE_WINDOW,
+  OPEN_FILE,
+  STORE_DATA
+} from '../events';
 
 export default {
   name: 'VideoPlayer',
@@ -107,6 +118,15 @@ export default {
         return;
       }
       return true;
+    },
+    dropFiles(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const files = [];
+      for (const file of e.dataTransfer.files) {
+        files.push(file.path);
+      }
+      window.electron.send(OPEN_WINDOW, { files });
     }
   },
   mounted() {
