@@ -8,7 +8,7 @@
 import videojs from 'video.js';
 import 'videojs-hotkeys';
 import { extname } from 'path';
-import { RESIZE_WINDOW, CLOSE_WINDOW, OPEN_FILE } from '../events';
+import { RESIZE_WINDOW, CLOSE_WINDOW, OPEN_FILE, STORE_DATA } from '../events';
 
 export default {
   name: 'VideoPlayer',
@@ -16,6 +16,10 @@ export default {
     return {
       player: null,
       originalSize: {},
+      file: null,
+      hash: null,
+      fileInfo: {},
+      startTime: 0,
       options: {
         autoplay: 'play',
         fluid: true,
@@ -36,12 +40,13 @@ export default {
         this.loadedData();
       });
       this.player.on('componentresize', () => {});
-      this.player.on('ready', () => {
-        console.log('ready');
-      });
       window.electron.on(OPEN_FILE, this.load);
     },
     loadedData() {
+      if (this.startTime) {
+        // todo confirm dialog or something indicate to user.
+        this.player.currentTime(this.startTime);
+      }
       // resize window size
       const dimensions = this.player.currentDimensions();
       this.originalSize = dimensions;
@@ -55,7 +60,12 @@ export default {
         merginHeight: 21
       });
     },
-    load(file) {
+    load({ file, hash, fileInfo }) {
+      // fixme ロードされていたものがあればsavePosition()で記録してから入れ替える。
+      this.file = file;
+      this.hash = hash;
+      this.fileInfo = fileInfo;
+      this.startTime = fileInfo.position;
       const ext = extname(file).toLowerCase();
       let type = 'video/mp4';
       if (ext === '.mp4') {
@@ -64,7 +74,16 @@ export default {
       this.player.src({ src: `local-resource://${file}`, type });
       this.player.load();
     },
+    savePosition() {
+      // fixme data validation
+      window.electron.send(STORE_DATA, {
+        hash: this.hash,
+        key: 'position',
+        value: this.player.currentTime()
+      });
+    },
     closeVideo() {
+      this.savePosition();
       window.electron.send(CLOSE_WINDOW);
     },
     keydown(e) {

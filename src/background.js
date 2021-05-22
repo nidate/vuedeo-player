@@ -5,7 +5,11 @@ import { app, protocol, BrowserWindow, ipcMain, Menu, dialog } from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer';
 const isDevelopment = process.env.NODE_ENV !== 'production';
-import { RESIZE_WINDOW, CLOSE_WINDOW, OPEN_FILE } from './events';
+import { RESIZE_WINDOW, CLOSE_WINDOW, OPEN_FILE, STORE_DATA } from './events';
+import hasha from 'hasha';
+import Store from 'electron-store';
+
+const store = new Store();
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -119,7 +123,14 @@ async function openWindow({ win, file } = {}) {
   await win.loadURL(url);
 
   if (file) {
-    win.webContents.send(OPEN_FILE, file);
+    const basename = path.basename(file);
+    const hash = await hasha.fromFile(file);
+
+    const fileInfo = store.get(hash, {});
+    fileInfo.name = basename;
+    store.set(hash, fileInfo);
+
+    win.webContents.send(OPEN_FILE, { file, hash, fileInfo });
   }
 
   if (process.env.WEBPACK_DEV_SERVER_URL && !process.env.IS_TEST) {
@@ -144,6 +155,10 @@ ipcMain.on(CLOSE_WINDOW, event => {
     return;
   }
   win.close();
+});
+
+ipcMain.on(STORE_DATA, (event, { hash, key, value }) => {
+  store.set(`${hash}.${key}`, value);
 });
 
 function createMenu() {
