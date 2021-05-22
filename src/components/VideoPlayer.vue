@@ -86,7 +86,9 @@ export default {
       this.player.load();
     },
     savePosition() {
-      // fixme data validation
+      if (!this.hash || !this.player) {
+        return;
+      }
       window.electron.send(STORE_DATA, {
         hash: this.hash,
         key: 'position',
@@ -99,6 +101,9 @@ export default {
     },
     keydown(e) {
       if (e.key === 'q') {
+        if (e.metaKey || e.ctrlKey || e.altKey) {
+          return true;
+        }
         // close window
         e.preventDefault();
         this.closeVideo();
