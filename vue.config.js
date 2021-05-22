@@ -14,6 +14,7 @@ module.exports = {
         mac: {
           category: 'public.app-category.video',
           target: 'dir',
+          icon: 'build/icon.png',
           extendInfo: {
             CFBundlePackageType: 'APPL',
             CFBundleDocumentTypes: [
