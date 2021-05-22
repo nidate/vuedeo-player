@@ -131,6 +131,10 @@ async function openWindow({ win, file } = {}) {
     store.set(hash, fileInfo);
 
     win.webContents.send(OPEN_FILE, { file, hash, fileInfo });
+
+    win.setTitle(basename);
+    win.setRepresentedFilename(file);
+    win.setDocumentEdited(true);
   }
 
   if (process.env.WEBPACK_DEV_SERVER_URL && !process.env.IS_TEST) {
