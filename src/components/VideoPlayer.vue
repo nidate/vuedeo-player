@@ -8,7 +8,7 @@
 import videojs from 'video.js';
 import 'videojs-hotkeys';
 import { extname } from 'path';
-import { CLOSE_WINDOW, OPEN_FILE, STORE_DATA } from '../events';
+import { OPEN_FILE, STORE_DATA } from '../events';
 
 const STATE = {
   INIT: 'INIT',
@@ -96,7 +96,7 @@ export default {
     },
     closeVideo() {
       this.savePosition();
-      window.electron.send(CLOSE_WINDOW);
+      this.$emit('close-video', this);
     },
     keydown(e) {
       if (e.key === 'q') {

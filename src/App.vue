@@ -5,13 +5,13 @@
     @dragenter.prevent
     @dragover.prevent
   >
-    <video-player @resize-video="resizeWindow" />
+    <video-player @resize-video="resizeWindow" @close-video="closeWindow" />
   </div>
 </template>
 
 <script>
 import VideoPlayer from './components/VideoPlayer.vue';
-import { OPEN_WINDOW, RESIZE_WINDOW } from './events';
+import { OPEN_WINDOW, RESIZE_WINDOW, CLOSE_WINDOW } from './events';
 
 export default {
   name: 'App',
@@ -36,6 +36,9 @@ export default {
         // fixme compute controller's mergin
         merginHeight: 21
       });
+    },
+    closeWindow() {
+      window.electron.send(CLOSE_WINDOW);
     }
   }
 };
