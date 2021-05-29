@@ -1,18 +1,35 @@
 <template>
-  <div class="video-player">
+  <div
+    class="video-player"
+    @drop="dropFiles"
+    @dragenter.prevent
+    @dragover.prevent
+  >
     <video-player />
   </div>
 </template>
 
 <script>
 import VideoPlayer from './components/VideoPlayer.vue';
+import { OPEN_WINDOW } from './events';
 
 export default {
   name: 'App',
   components: {
     VideoPlayer
   },
-  mounted() {}
+  mounted() {},
+  methods: {
+    dropFiles(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const files = [];
+      for (const file of e.dataTransfer.files) {
+        files.push(file.path);
+      }
+      window.electron.send(OPEN_WINDOW, { files });
+    }
+  }
 };
 </script>
 
