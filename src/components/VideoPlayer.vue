@@ -8,7 +8,7 @@
 import videojs from 'video.js';
 import 'videojs-hotkeys';
 import { extname } from 'path';
-import { RESIZE_WINDOW, CLOSE_WINDOW, OPEN_FILE, STORE_DATA } from '../events';
+import { CLOSE_WINDOW, OPEN_FILE, STORE_DATA } from '../events';
 
 const STATE = {
   INIT: 'INIT',
@@ -55,18 +55,17 @@ export default {
         // todo confirm dialog or something indicate to user.
         this.player.currentTime(this.startTime);
       }
-      // resize window size
-      const dimensions = this.player.currentDimensions();
-      this.originalSize = dimensions;
-      this.resizeWindow(dimensions);
+      // initialize window size
+      this.originalSize = this.player.currentDimensions();
+      this.resizeVideo(this.originalSize);
     },
-    resizeWindow({ width, height }) {
-      window.electron.send(RESIZE_WINDOW, {
-        width: Math.ceil(width),
-        height: Math.ceil(height),
-        // fixme compute controller's mergin
-        merginHeight: 21
-      });
+    /**
+     * request parent component to resize window
+     */
+    resizeVideo({ width, height }) {
+      width = Math.ceil(width);
+      height = Math.ceil(height);
+      this.$emit('resize-video', { width, height });
     },
     load({ file, hash, fileInfo }) {
       // save last opend file position
@@ -111,12 +110,12 @@ export default {
       } else if (e.key === '1') {
         // change original video size
         e.preventDefault();
-        this.resizeWindow(this.originalSize);
+        this.resizeVideo(this.originalSize);
         return;
       } else if (e.key === '2') {
         // change 2x video size
         e.preventDefault();
-        this.resizeWindow({
+        this.resizeVideo({
           width: this.originalSize.width * 2,
           height: this.originalSize.height * 2
         });
