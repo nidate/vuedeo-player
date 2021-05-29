@@ -21,10 +21,18 @@ import {
   STORE_DATA
 } from '../events';
 
+const STATE = {
+  INIT: 'INIT',
+  READY: 'READY',
+  LOADING: 'LOADING',
+  ACTIVE: 'ACTIVE'
+};
+
 export default {
   name: 'VideoPlayer',
   data() {
     return {
+      state: STATE.INIT,
       player: null,
       originalSize: {},
       file: null,
@@ -46,14 +54,14 @@ export default {
   methods: {
     // called after videojs initialized
     playerReady() {
-      this.ready = true;
+      this.state = STATE.READY;
       this.player.on('loadeddata', () => {
         this.loadedData();
       });
-      this.player.on('componentresize', () => {});
       window.electron.on(OPEN_FILE, this.load);
     },
     loadedData() {
+      this.state = STATE.ACTIVE;
       if (this.startTime) {
         // todo confirm dialog or something indicate to user.
         this.player.currentTime(this.startTime);
@@ -75,6 +83,7 @@ export default {
       // save last opend file position
       this.savePosition();
       // load new file
+      this.state = STATE.LOADING;
       this.file = file;
       this.hash = hash;
       this.fileInfo = fileInfo;
