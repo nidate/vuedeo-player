@@ -57,7 +57,7 @@ app.on('will-finish-launching', () => {
     if (app.isReady() === false) {
       initOpenFileQueue.push(file);
     } else {
-      openWindow(file);
+      openWindow({ file });
     }
     event.preventDefault();
   });
