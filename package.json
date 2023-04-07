@@ -2,20 +2,28 @@
   "name": "vuedeo-player",
   "author": "nidate@core-note.jp",
   "description": "Video player application written in electron and vue",
-  "version": "0.1.1",
+  "version": "0.2.1",
   "private": true,
   "license": "GPL-3.0-or-later",
   "repository": {
     "type": "git",
     "url": "https://github.com/nidate/vuedeo-player.git"
   },
+  "debug": {
+    "env": {
+      "VITE_DEV_SERVER_URL": "http://127.0.0.1:3344/"
+    }
+  },
   "scripts": {
+    "dev": "vite",
+    "build": "vite build && electron-builder",
+    "serve": "vite preview",
     "lint": "eslint --ext .js,.vue --ignore-path .gitignore src",
     "pretty": "eslint --ext .js,.vue --ignore-path .gitignore --fix src",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps"
   },
-  "main": "background.js",
+  "main": "dist-electron/main/index.js",
   "dependencies": {
     "electron-store": "^8.0.0",
     "hasha": "^5.2.2",
@@ -23,10 +31,14 @@
     "vue": "^3.0.0"
   },
   "devDependencies": {
-    "electron": "^11.0.0",
-    "electron-devtools-installer": "^3.1.0",
+    "@vitejs/plugin-vue": "^4.1.0",
+    "electron": "^23.2.0",
+    "electron-builder": "^23.6.0",
     "eslint": "^8.36.0",
     "eslint-plugin-vue": "^8.7.1",
-    "video.js": "^7.11.8"
+    "video.js": "^7.11.8",
+    "vite": "^4.2.1",
+    "vite-plugin-electron": "^0.11.1",
+    "vite-plugin-electron-renderer": "^0.13.12"
   }
 }
