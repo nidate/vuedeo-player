@@ -17,8 +17,6 @@
 
 import path from 'path';
 import { app, protocol, BrowserWindow, ipcMain, Menu, dialog } from 'electron';
-import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
-import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer';
 const isDevelopment = process.env.NODE_ENV !== 'production';
 import {
   RESIZE_WINDOW,
@@ -26,9 +24,18 @@ import {
   OPEN_FILE,
   STORE_DATA,
   OPEN_WINDOW
-} from './events';
+} from '../../src/events';
 import hasha from 'hasha';
 import Store from 'electron-store';
+
+process.env.DIST_ELECTRON = path.join(__dirname, '..');
+process.env.DIST = path.join(process.env.DIST_ELECTRON, '../dist');
+process.env.PUBLIC = process.env.VITE_DEV_SERVER_URL
+  ? path.join(process.env.DIST_ELECTRON, '../public')
+  : process.env.DIST;
+const preload = path.join(__dirname, '../preload/index.js');
+const url = process.env.VITE_DEV_SERVER_URL;
+const indexHtml = path.join(process.env.DIST, 'index.html');
 
 const store = new Store();
 
@@ -67,20 +74,20 @@ app.on('will-finish-launching', () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  if (isDevelopment && !process.env.IS_TEST) {
-    // Install Vue Devtools
-    try {
-      await installExtension(VUEJS3_DEVTOOLS);
-    } catch (e) {
-      console.error('Vue Devtools failed to install:', e.toString());
-    }
-  }
-  createProtocol('app');
+  // @fixme
+  // if (isDevelopment && !process.env.IS_TEST) {
+  //   // Install Vue Devtools
+  //   try {
+  //     await installExtension(VUEJS3_DEVTOOLS);
+  //   } catch (e) {
+  //     console.error('Vue Devtools failed to install:', e.toString());
+  //   }
+  // }
   registerLocalResourceProtocol();
   createMenu();
 
   if (initOpenFileQueue.length) {
-    initOpenFileQueue.forEach(file => openWindow(file));
+    initOpenFileQueue.forEach((file) => openWindow(file));
   } else {
     openWindow();
   }
@@ -89,7 +96,7 @@ app.on('ready', async () => {
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   if (process.platform === 'win32') {
-    process.on('message', data => {
+    process.on('message', (data) => {
       if (data === 'graceful-exit') {
         app.quit();
       }
@@ -135,15 +142,17 @@ async function openWindow({ win, file } = {}) {
       webPreferences: {
         contextIsolation: true,
         nodeIntegration: false,
-        preload: path.join(__dirname, 'preload.js')
+        preload
       }
     });
   }
-  if (process.env.WEBPACK_DEV_SERVER_URL && !process.env.IS_TEST) {
-    win.webContents.openDevTools({ mode: 'detach' });
+
+  if (process.env.VITE_DEV_SERVER_URL) {
+    await win.loadURL(url);
+    win.webContents.openDevTools();
+  } else {
+    win.loadFile(indexHtml);
   }
-  let url = process.env.WEBPACK_DEV_SERVER_URL || 'app://./index.html';
-  await win.loadURL(url);
   if (!file) {
     return win;
   }
@@ -175,7 +184,7 @@ ipcMain.on(RESIZE_WINDOW, (event, { width, height, merginHeight = 0 }) => {
   win.setAspectRatio(width / height);
 });
 
-ipcMain.on(CLOSE_WINDOW, event => {
+ipcMain.on(CLOSE_WINDOW, (event) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   if (!win) {
     return;
@@ -213,10 +222,10 @@ function createMenu() {
         {
           label: 'Open',
           accelerator: 'CmdOrCtrl+o',
-          click: function(item, win) {
+          click: function (item, win) {
             openFileDialog(win).then(
               () => {},
-              err => {
+              (err) => {
                 console.error(err);
               }
             );
@@ -225,7 +234,7 @@ function createMenu() {
         {
           label: 'New Window',
           accelerator: 'CmdOrCtrl+n',
-          click: function() {
+          click: function () {
             openWindow();
           }
         },
