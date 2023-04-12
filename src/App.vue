@@ -5,7 +5,10 @@
     @dragenter.prevent
     @dragover.prevent
   >
-    <video-player @resize-video="resizeWindow" @close-video="closeWindow" />
+    <video-player
+      @resize-video="resizeWindow"
+      @close-video="closeWindow"
+    />
   </div>
 </template>
 
