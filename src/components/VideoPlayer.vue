@@ -7,7 +7,6 @@
 <script>
 import videojs from 'video.js';
 import 'videojs-hotkeys';
-import { extname } from 'path';
 import { OPEN_FILE, STORE_DATA } from '../events';
 
 const STATE = {
@@ -67,7 +66,7 @@ export default {
       height = Math.ceil(height);
       this.$emit('resize-video', { width, height });
     },
-    load({ file, hash, fileInfo }) {
+    load({ file, hash, fileInfo, mimeType }) {
       // save last opend file position
       this.savePosition();
       // load new file
@@ -76,12 +75,7 @@ export default {
       this.hash = hash;
       this.fileInfo = fileInfo;
       this.startTime = fileInfo.position;
-      const ext = extname(file).toLowerCase();
-      let type = 'video/mp4';
-      if (ext === '.mp4') {
-        type = 'video/mp4';
-      }
-      this.player.src({ src: `local-resource://${file}`, type });
+      this.player.src({ src: `local-resource://${file}`, mimeType });
       this.player.load();
     },
     savePosition() {

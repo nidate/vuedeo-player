@@ -108,17 +108,21 @@ if (isDevelopment) {
   }
 }
 
+function getMimeType(url) {
+  const extension = path.extname(url).toLowerCase();
+  let mimeType = 'video/mp4';
+  if (extension === '.mp4') {
+    mimeType = 'video/mp4';
+  }
+  return mimeType;
+}
+
 function registerLocalResourceProtocol() {
   protocol.registerFileProtocol('local-resource', (request, callback) => {
     const url = request.url.replace(/^local-resource:\/\//, '');
     // Decode URL to prevent errors when loading filenames with UTF-8 chars or chars like "#"
     const decodedUrl = decodeURI(url); // Needed in case URL contains spaces
-
-    const extension = path.extname(decodedUrl).toLowerCase();
-    let mimeType = 'video/mp4';
-    if (extension === '.mp4') {
-      mimeType = 'video/mp4';
-    }
+    const mimeType = getMimeType(decodedUrl);
     try {
       return callback({ path: decodedUrl, mimeType });
     } catch (error) {
@@ -167,7 +171,8 @@ async function openWindow({ win, file } = {}) {
   fileInfo.name = basename;
   store.set(hash, fileInfo);
 
-  win.webContents.send(OPEN_FILE, { file, hash, fileInfo });
+  const mimeType = getMimeType(file);
+  win.webContents.send(OPEN_FILE, { file, hash, fileInfo, mimeType });
   win.setTitle(basename);
   win.setRepresentedFilename(file);
   win.setDocumentEdited(true);
