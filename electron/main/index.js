@@ -180,12 +180,12 @@ async function openWindow({ win, file } = {}) {
   return win;
 }
 
-ipcMain.on(RESIZE_WINDOW, (event, { width, height, merginHeight = 0 }) => {
+ipcMain.on(RESIZE_WINDOW, (event, { width, height, marginHeight = 0 }) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   if (!win) {
     return;
   }
-  win.setSize(width, height + merginHeight);
+  win.setSize(width, height + marginHeight);
   win.setAspectRatio(width / height);
 });
 
