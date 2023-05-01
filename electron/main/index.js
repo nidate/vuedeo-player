@@ -41,7 +41,18 @@ const store = new Store();
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'app', privileges: { secure: true, standard: true, stream: true } }
+  { scheme: 'app', privileges: { secure: true, standard: true, stream: true } },
+  {
+    scheme: 'local-resource',
+    privileges: {
+      starndard: true,
+      secure: false,
+      supportFetchAPI: true,
+      corsEnabled: true,
+      bypassCSP: true,
+      stream: true
+    }
+  }
 ]);
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
