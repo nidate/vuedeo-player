@@ -7,6 +7,7 @@
       role: 'Viewer'
     }
   ],
+  files: ['dist', 'dist-electron'],
   mac: {
     category: 'public.app-category.video',
     target: 'dir',

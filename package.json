@@ -19,9 +19,7 @@
     "build": "vite build && electron-builder",
     "serve": "vite preview",
     "lint": "eslint --ext .js,.vue --ignore-path .gitignore src",
-    "pretty": "eslint --ext .js,.vue --ignore-path .gitignore --fix src",
-    "postinstall": "electron-builder install-app-deps",
-    "postuninstall": "electron-builder install-app-deps"
+    "pretty": "eslint --ext .js,.vue --ignore-path .gitignore --fix src"
   },
   "main": "dist-electron/main/index.js",
   "dependencies": {
