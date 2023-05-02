@@ -85,15 +85,6 @@ app.on('will-finish-launching', () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  // @fixme
-  // if (isDevelopment && !process.env.IS_TEST) {
-  //   // Install Vue Devtools
-  //   try {
-  //     await installExtension(VUEJS3_DEVTOOLS);
-  //   } catch (e) {
-  //     console.error('Vue Devtools failed to install:', e.toString());
-  //   }
-  // }
   registerLocalResourceProtocol();
   createMenu();
 
