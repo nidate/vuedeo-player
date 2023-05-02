@@ -174,10 +174,7 @@ async function openWindow({ win, file } = {}) {
 
   // get file information
   const basename = path.basename(file);
-  // If you use `hasha.fromFile`, Electron 11 will crash on the process exit.
-  // Electron 11 has a problem on exiting when the `worker_threads` used, and hasha.fromFile uses it.
-  // https://github.com/electron/electron/issues/23315
-  const hash = hasha.fromFileSync(file);
+  const hash = await hasha.fromFile(file);
   const fileInfo = store.get(hash, {});
   fileInfo.name = basename;
   store.set(hash, fileInfo);
