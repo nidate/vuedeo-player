@@ -9,15 +9,22 @@ npm install
 
 ### Compiles and hot-reloads for development
 ```
-npm run electron:serve
+npm run dev
 ```
 
 ### Compiles and minifies for production
 ```
-npm run electron:build
+npm run build
+```
+
+### Lints  files
+
+```
+npm run lint
 ```
 
 ### Lints and fixes files
+
 ```
-npm run lint
+npm run pretty
 ```
