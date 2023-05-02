@@ -4,6 +4,7 @@ module.exports = {
     'eslint:recommended'
   ],
   env: {
-    es2021: true
+    es2021: true,
+    node: true
   }
 }

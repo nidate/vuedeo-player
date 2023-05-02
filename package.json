@@ -18,8 +18,8 @@
     "dev": "vite",
     "build": "vite build && electron-builder",
     "serve": "vite preview",
-    "lint": "eslint --ext .js,.vue --ignore-path .gitignore src",
-    "pretty": "eslint --ext .js,.vue --ignore-path .gitignore --fix src"
+    "lint": "eslint --ext .js,.vue --ignore-path .gitignore src electron",
+    "pretty": "eslint --ext .js,.vue --ignore-path .gitignore --fix src electron"
   },
   "main": "dist-electron/main/index.js",
   "dependencies": {
