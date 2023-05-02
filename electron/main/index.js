@@ -17,8 +17,6 @@
 
 import path from 'path';
 import { app, protocol, BrowserWindow, ipcMain, Menu, dialog } from 'electron';
-import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
-import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer';
 const isDevelopment = process.env.NODE_ENV !== 'production';
 import {
   RESIZE_WINDOW,
@@ -26,15 +24,35 @@ import {
   OPEN_FILE,
   STORE_DATA,
   OPEN_WINDOW
-} from './events';
+} from '../../src/events';
 import hasha from 'hasha';
 import Store from 'electron-store';
+
+process.env.DIST_ELECTRON = path.join(__dirname, '..');
+process.env.DIST = path.join(process.env.DIST_ELECTRON, '../dist');
+process.env.PUBLIC = process.env.VITE_DEV_SERVER_URL
+  ? path.join(process.env.DIST_ELECTRON, '../public')
+  : process.env.DIST;
+const preload = path.join(__dirname, '../preload/index.js');
+const url = process.env.VITE_DEV_SERVER_URL;
+const indexHtml = path.join(process.env.DIST, 'index.html');
 
 const store = new Store();
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'app', privileges: { secure: true, standard: true, stream: true } }
+  { scheme: 'app', privileges: { secure: true, standard: true, stream: true } },
+  {
+    scheme: 'local-resource',
+    privileges: {
+      starndard: true,
+      secure: false,
+      supportFetchAPI: true,
+      corsEnabled: true,
+      bypassCSP: true,
+      stream: true
+    }
+  }
 ]);
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
@@ -67,20 +85,11 @@ app.on('will-finish-launching', () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  if (isDevelopment && !process.env.IS_TEST) {
-    // Install Vue Devtools
-    try {
-      await installExtension(VUEJS3_DEVTOOLS);
-    } catch (e) {
-      console.error('Vue Devtools failed to install:', e.toString());
-    }
-  }
-  createProtocol('app');
   registerLocalResourceProtocol();
   createMenu();
 
   if (initOpenFileQueue.length) {
-    initOpenFileQueue.forEach(file => openWindow(file));
+    initOpenFileQueue.forEach((file) => openWindow(file));
   } else {
     openWindow();
   }
@@ -89,7 +98,7 @@ app.on('ready', async () => {
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   if (process.platform === 'win32') {
-    process.on('message', data => {
+    process.on('message', (data) => {
       if (data === 'graceful-exit') {
         app.quit();
       }
@@ -101,17 +110,21 @@ if (isDevelopment) {
   }
 }
 
+function getMimeType(url) {
+  const extension = path.extname(url).toLowerCase();
+  let mimeType = 'video/mp4';
+  if (extension === '.mp4') {
+    mimeType = 'video/mp4';
+  }
+  return mimeType;
+}
+
 function registerLocalResourceProtocol() {
   protocol.registerFileProtocol('local-resource', (request, callback) => {
     const url = request.url.replace(/^local-resource:\/\//, '');
     // Decode URL to prevent errors when loading filenames with UTF-8 chars or chars like "#"
     const decodedUrl = decodeURI(url); // Needed in case URL contains spaces
-
-    const extension = path.extname(decodedUrl).toLowerCase();
-    let mimeType = 'video/mp4';
-    if (extension === '.mp4') {
-      mimeType = 'video/mp4';
-    }
+    const mimeType = getMimeType(decodedUrl);
     try {
       return callback({ path: decodedUrl, mimeType });
     } catch (error) {
@@ -135,30 +148,30 @@ async function openWindow({ win, file } = {}) {
       webPreferences: {
         contextIsolation: true,
         nodeIntegration: false,
-        preload: path.join(__dirname, 'preload.js')
+        preload
       }
     });
   }
-  if (process.env.WEBPACK_DEV_SERVER_URL && !process.env.IS_TEST) {
-    win.webContents.openDevTools({ mode: 'detach' });
+
+  if (process.env.VITE_DEV_SERVER_URL) {
+    await win.loadURL(url);
+    win.webContents.openDevTools();
+  } else {
+    await win.loadFile(indexHtml);
   }
-  let url = process.env.WEBPACK_DEV_SERVER_URL || 'app://./index.html';
-  await win.loadURL(url);
   if (!file) {
     return win;
   }
 
   // get file information
   const basename = path.basename(file);
-  // If you use `hasha.fromFile`, Electron 11 will crash on the process exit.
-  // Electron 11 has a problem on exiting when the `worker_threads` used, and hasha.fromFile uses it.
-  // https://github.com/electron/electron/issues/23315
-  const hash = hasha.fromFileSync(file);
+  const hash = await hasha.fromFile(file);
   const fileInfo = store.get(hash, {});
   fileInfo.name = basename;
   store.set(hash, fileInfo);
 
-  win.webContents.send(OPEN_FILE, { file, hash, fileInfo });
+  const mimeType = getMimeType(file);
+  win.webContents.send(OPEN_FILE, { file, hash, fileInfo, mimeType });
   win.setTitle(basename);
   win.setRepresentedFilename(file);
   win.setDocumentEdited(true);
@@ -166,16 +179,16 @@ async function openWindow({ win, file } = {}) {
   return win;
 }
 
-ipcMain.on(RESIZE_WINDOW, (event, { width, height, merginHeight = 0 }) => {
+ipcMain.on(RESIZE_WINDOW, (event, { width, height, marginHeight = 0 }) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   if (!win) {
     return;
   }
-  win.setSize(width, height + merginHeight);
+  win.setSize(width, height + marginHeight);
   win.setAspectRatio(width / height);
 });
 
-ipcMain.on(CLOSE_WINDOW, event => {
+ipcMain.on(CLOSE_WINDOW, (event) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   if (!win) {
     return;
@@ -213,10 +226,10 @@ function createMenu() {
         {
           label: 'Open',
           accelerator: 'CmdOrCtrl+o',
-          click: function(item, win) {
+          click: function (item, win) {
             openFileDialog(win).then(
               () => {},
-              err => {
+              (err) => {
                 console.error(err);
               }
             );
@@ -225,7 +238,7 @@ function createMenu() {
         {
           label: 'New Window',
           accelerator: 'CmdOrCtrl+n',
-          click: function() {
+          click: function () {
             openWindow();
           }
         },

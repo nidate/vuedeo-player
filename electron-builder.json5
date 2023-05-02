@@ -1,0 +1,31 @@
+{
+  appId: 'jp.core-note.${name}',
+  fileAssociations: [
+    {
+      ext: ['mp4', 'mov', 'insv'],
+      name: 'Movie',
+      role: 'Viewer'
+    }
+  ],
+  files: ['dist', 'dist-electron'],
+  mac: {
+    category: 'public.app-category.video',
+    target: 'dir',
+    icon: 'build/icon.png',
+    extendInfo: {
+      CFBundlePackageType: 'APPL',
+      CFBundleDocumentTypes: [
+        {
+          CFBundleTypeRole: 'Viewer',
+          LSHandlerRank: 'Default',
+          LSItemContentTypes: [
+            'public.mp4',
+            'public.mpg',
+            'public.mov',
+            'public.insv'
+          ]
+        }
+      ]
+    }
+  }
+}

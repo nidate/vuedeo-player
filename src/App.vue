@@ -5,7 +5,10 @@
     @dragenter.prevent
     @dragover.prevent
   >
-    <video-player @resize-video="resizeWindow" @close-video="closeWindow" />
+    <video-player
+      @resize-video="resizeWindow"
+      @close-video="closeWindow"
+    />
   </div>
 </template>
 
@@ -33,8 +36,8 @@ export default {
       window.electron.send(RESIZE_WINDOW, {
         width,
         height,
-        // fixme compute controller's mergin
-        merginHeight: 21
+        // fixme compute controller's margin
+        marginHeight: 21
       });
     },
     closeWindow() {
@@ -51,6 +54,6 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  mergin: 0;
+  margin: 0;
 }
 </style>

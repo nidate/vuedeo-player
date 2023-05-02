@@ -1,13 +1,14 @@
 <template>
-  <div v-on:keydown="keydown">
-    <video ref="videoPlayer" class="video-js"></video>
+  <div @keydown="keydown">
+    <video
+      ref="videoPlayer"
+      class="video-js"
+    />
   </div>
 </template>
-<style src="video.js/dist/video-js.css"></style>
 <script>
 import videojs from 'video.js';
 import 'videojs-hotkeys';
-import { extname } from 'path';
 import { OPEN_FILE, STORE_DATA } from '../events';
 
 const STATE = {
@@ -19,6 +20,7 @@ const STATE = {
 
 export default {
   name: 'VideoPlayer',
+  emits: ['resize-video', 'close-video'],
   data() {
     return {
       state: STATE.INIT,
@@ -40,6 +42,72 @@ export default {
     };
   },
   computed: {},
+  mounted() {
+    const component = this;
+    this.player = videojs(this.$refs.videoPlayer, this.options, () => {
+      this.player.hotkeys({
+        enableHoverScroll: true,
+        alwaysCaptureHotkeys: true,
+        enableNumbers: false,
+        // override up, down
+        volumeUpKey: () => {
+          return false;
+        },
+        volumeDownKey: () => {
+          return false;
+        },
+        forwardKey: (e) => {
+          return ['ArrowUp', 'ArrowRight'].includes(e.key);
+        },
+        rewindKey: (e) => {
+          return ['ArrowDown', 'ArrowLeft'].includes(e.key);
+        },
+        seekStep: (e) => {
+          const step = 5;
+          // seek step up
+          if (e.key === 'ArrowUp' || e.which === 'ArrowDown') {
+            return step * 3;
+          }
+          return step;
+        },
+        customKeys: {
+          // change playback rate '[' ']' '\'
+          // todo indicate current playback rate on the screen
+          playbackRateUp: {
+            key: (e) => {
+              return e.key === '\\';
+            },
+            handler: (player) => {
+              let rate = Math.round(player.playbackRate() * 100) + 10;
+              player.playbackRate(rate / 100);
+            }
+          },
+          playbackRateDown: {
+            key: (e) => e.key === '[',
+            handler: (player) => {
+              let rate = Math.round(player.playbackRate() * 100) - 10;
+              if (rate <= 0) {
+                rate = player.playbackRate();
+              }
+              player.playbackRate(rate / 100);
+            }
+          },
+          playbackRateReset: {
+            key: (e) => e.key === ']',
+            handler: (player) => {
+              player.playbackRate(1);
+            }
+          }
+        }
+      });
+      component.playerReady();
+    });
+  },
+  beforeUnmount() {
+    if (this.player) {
+      this.player.dispose();
+    }
+  },
   methods: {
     // called after videojs initialized
     playerReady() {
@@ -67,7 +135,7 @@ export default {
       height = Math.ceil(height);
       this.$emit('resize-video', { width, height });
     },
-    load({ file, hash, fileInfo }) {
+    load({ file, hash, fileInfo, mimeType }) {
       // save last opend file position
       this.savePosition();
       // load new file
@@ -76,12 +144,7 @@ export default {
       this.hash = hash;
       this.fileInfo = fileInfo;
       this.startTime = fileInfo.position;
-      const ext = extname(file).toLowerCase();
-      let type = 'video/mp4';
-      if (ext === '.mp4') {
-        type = 'video/mp4';
-      }
-      this.player.src({ src: `local-resource://${file}`, type });
+      this.player.src({ src: `local-resource://${file}`, mimeType });
       this.player.load();
     },
     savePosition() {
@@ -123,72 +186,7 @@ export default {
       }
       return true;
     }
-  },
-  mounted() {
-    const component = this;
-    this.player = videojs(this.$refs.videoPlayer, this.options, () => {
-      this.player.hotkeys({
-        enableHoverScroll: true,
-        alwaysCaptureHotkeys: true,
-        enableNumbers: false,
-        // override up, down
-        volumeUpKey: () => {
-          return false;
-        },
-        volumeDownKey: () => {
-          return false;
-        },
-        forwardKey: e => {
-          return ['ArrowUp', 'ArrowRight'].includes(e.key);
-        },
-        rewindKey: e => {
-          return ['ArrowDown', 'ArrowLeft'].includes(e.key);
-        },
-        seekStep: e => {
-          const step = 5;
-          // seek step up
-          if (e.key === 'ArrowUp' || e.which === 'ArrowDown') {
-            return step * 3;
-          }
-          return step;
-        },
-        customKeys: {
-          // change playback rate '[' ']' '\'
-          // todo indicate current playback rate on the screen
-          playbackRateUp: {
-            key: e => {
-              return e.key === '\\';
-            },
-            handler: player => {
-              let rate = Math.round(player.playbackRate() * 100) + 10;
-              player.playbackRate(rate / 100);
-            }
-          },
-          playbackRateDown: {
-            key: e => e.key === '[',
-            handler: player => {
-              let rate = Math.round(player.playbackRate() * 100) - 10;
-              if (rate <= 0) {
-                rate = player.playbackRate();
-              }
-              player.playbackRate(rate / 100);
-            }
-          },
-          playbackRateReset: {
-            key: e => e.key === ']',
-            handler: player => {
-              player.playbackRate(1);
-            }
-          }
-        }
-      });
-      component.playerReady();
-    });
-  },
-  beforeUnmount() {
-    if (this.player) {
-      this.player.dispose();
-    }
   }
 };
 </script>
+<style src="video.js/dist/video-js.css"></style>
