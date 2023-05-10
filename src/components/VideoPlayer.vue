@@ -68,7 +68,8 @@ export default {
           if (e.key === 'ArrowUp' || e.which === 'ArrowDown') {
             return step * 3;
           }
-          return step;
+          const rate = this.player.playbackRate() || 1;
+          return step * rate;
         },
         customKeys: {
           // change playback rate '[' ']' '\'
