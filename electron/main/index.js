@@ -16,7 +16,7 @@
  **/
 
 import path from 'path';
-import { app, protocol, BrowserWindow, ipcMain, Menu, dialog } from 'electron';
+import { app, protocol, BrowserWindow, ipcMain, Menu, dialog, shell } from 'electron';
 const isDevelopment = process.env.NODE_ENV !== 'production';
 import {
   RESIZE_WINDOW,
@@ -243,6 +243,17 @@ function createMenu() {
           }
         },
         { role: 'close' },
+        { type: 'separator' },
+        {
+          label: 'Show in Finder',
+          accelerator: 'Cmd+Option+Space',
+          click: function(item, win) {
+            const filename = win.representedFilename;
+            if (filename) {
+              shell.showItemInFolder(filename);
+            }
+          }
+        },
         { type: 'separator' },
         { role: 'quit' }
       ]
