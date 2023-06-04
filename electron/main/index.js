@@ -115,6 +115,8 @@ function getMimeType(url) {
   let mimeType = 'video/mp4';
   if (extension === '.mp4') {
     mimeType = 'video/mp4';
+  } else if (extension === '.mp3') {
+    mimeType = 'audio/mp3';
   }
   return mimeType;
 }
