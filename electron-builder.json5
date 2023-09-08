@@ -2,7 +2,7 @@
   appId: 'jp.core-note.${name}',
   fileAssociations: [
     {
-      ext: ['mp4', 'mov', 'insv'],
+      ext: ['mp3', 'mp4', 'mov', 'insv'],
       name: 'Movie',
       role: 'Viewer'
     }
@@ -19,6 +19,7 @@
           CFBundleTypeRole: 'Viewer',
           LSHandlerRank: 'Default',
           LSItemContentTypes: [
+            'public.mp3',
             'public.mp4',
             'public.mpg',
             'public.mov',
