@@ -8,6 +8,7 @@
 </template>
 <script>
 import videojs from 'video.js';
+import abLoopPlugin from 'videojs-abloop';
 import 'videojs-hotkeys';
 import { OPEN_FILE, STORE_DATA } from '../events';
 
@@ -37,13 +38,20 @@ export default {
         responsive: true,
         controls: true,
         sources: [],
-        playbackRates: [0.5, 0.75, 1, 1.5, 2, 3]
-      }
+        playbackRates: [0.5, 0.75, 1, 1.5, 2, 3],
+        plugins: {
+          abLoopPlugin: {
+            enabled: true,
+            createButtons: true
+          }
+        }
+      },
     };
   },
   computed: {},
   mounted() {
     const component = this;
+    abLoopPlugin(window, videojs);
     this.player = videojs(this.$refs.videoPlayer, this.options, () => {
       this.player.hotkeys({
         enableHoverScroll: true,
