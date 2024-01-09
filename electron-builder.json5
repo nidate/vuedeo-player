@@ -2,7 +2,7 @@
   appId: 'jp.core-note.${name}',
   fileAssociations: [
     {
-      ext: ['mp3', 'mp4', 'mov', 'insv'],
+      ext: ['mp3', 'mp4', 'mov', 'insv', 'm4a'],
       name: 'Movie',
       role: 'Viewer'
     }
@@ -23,7 +23,8 @@
             'public.mp4',
             'public.mpg',
             'public.mov',
-            'public.insv'
+            'public.insv',
+            'public.m4a'
           ]
         }
       ]
