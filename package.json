@@ -28,8 +28,8 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.3.4",
-    "electron": "^26.2.0",
-    "electron-builder": "^24.6.4",
+    "electron": "^28.1.2",
+    "electron-builder": "^24.9.1",
     "eslint": "^8.48.0",
     "eslint-plugin-vue": "^9.17.0",
     "video.js": "^8.5.2",
