@@ -27,7 +27,7 @@
     "hasha": "^5.2.2"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^4.3.4",
+    "@vitejs/plugin-vue": "^5.0.2",
     "electron": "^28.1.2",
     "electron-builder": "^24.9.1",
     "eslint": "^8.48.0",
@@ -35,8 +35,8 @@
     "video.js": "^8.5.2",
     "videojs-abloop": "^1.2.0",
     "videojs-hotkeys": "^0.2.28",
-    "vite": "^4.4.9",
-    "vite-plugin-electron": "^0.14.0",
+    "vite": "^5.0.11",
+    "vite-plugin-electron": "^0.28.0",
     "vite-plugin-electron-renderer": "^0.14.5",
     "vue": "^3.3.4"
   }
