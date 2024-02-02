@@ -5,6 +5,10 @@
   "version": "0.2.2",
   "private": true,
   "license": "GPL-3.0-or-later",
+  "type": "module",
+  "engines": {
+    "node": ">=16"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/nidate/vuedeo-player.git"
@@ -24,7 +28,7 @@
   "main": "dist-electron/main/index.js",
   "dependencies": {
     "electron-store": "^8.1.0",
-    "hasha": "^5.2.2"
+    "hasha": "^6.0.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.3",
