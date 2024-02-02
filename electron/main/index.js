@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +13,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  **/
 
-import path from 'path';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { app, protocol, BrowserWindow, ipcMain, Menu, dialog, shell } from 'electron';
 const isDevelopment = process.env.NODE_ENV !== 'production';
 import {
@@ -25,8 +24,11 @@ import {
   STORE_DATA,
   OPEN_WINDOW
 } from '../../src/events';
-import hasha from 'hasha';
+import { hashFile } from 'hasha';
 import Store from 'electron-store';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 process.env.DIST_ELECTRON = path.join(__dirname, '..');
 process.env.DIST = path.join(process.env.DIST_ELECTRON, '../dist');
@@ -167,7 +169,7 @@ async function openWindow({ win, file } = {}) {
 
   // get file information
   const basename = path.basename(file);
-  const hash = await hasha.fromFile(file);
+  const hash = await hashFile(file);
   const fileInfo = store.get(hash, {});
   fileInfo.name = basename;
   store.set(hash, fileInfo);
