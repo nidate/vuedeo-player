@@ -3,6 +3,9 @@
     <video
       ref="videoPlayer"
       class="video-js"
+      @drop="dropFiles"
+      @dragenter.prevent
+      @dragover.prevent
     />
   </div>
 </template>
@@ -10,7 +13,7 @@
 import videojs from 'video.js';
 import abLoopPlugin from 'videojs-abloop';
 import 'videojs-hotkeys';
-import { OPEN_FILE, STORE_DATA } from '../events';
+import { OPEN_WINDOW, OPEN_FILE, STORE_DATA } from '../events';
 
 const STATE = {
   INIT: 'INIT',
@@ -118,6 +121,16 @@ export default {
     }
   },
   methods: {
+    dropFiles(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.savePosition();
+      const files = [];
+      for (const file of e.dataTransfer.files) {
+        files.push(file.path);
+      }
+      window.electron.send(OPEN_WINDOW, { files });
+    },
     // called after videojs initialized
     playerReady() {
       this.state = STATE.READY;
@@ -145,8 +158,6 @@ export default {
       this.$emit('resize-video', { width, height });
     },
     load({ file, hash, fileInfo, mimeType }) {
-      // save last opend file position
-      this.savePosition();
       // load new file
       this.state = STATE.LOADING;
       this.file = file;

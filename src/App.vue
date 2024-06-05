@@ -1,10 +1,5 @@
 <template>
-  <div
-    class="video-player"
-    @drop="dropFiles"
-    @dragenter.prevent
-    @dragover.prevent
-  >
+  <div class="video-player">
     <video-player
       @resize-video="resizeWindow"
       @close-video="closeWindow"
@@ -14,7 +9,7 @@
 
 <script>
 import VideoPlayer from './components/VideoPlayer.vue';
-import { OPEN_WINDOW, RESIZE_WINDOW, CLOSE_WINDOW } from './events';
+import { RESIZE_WINDOW, CLOSE_WINDOW } from './events';
 
 export default {
   name: 'App',
@@ -23,15 +18,6 @@ export default {
   },
   mounted() {},
   methods: {
-    dropFiles(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      const files = [];
-      for (const file of e.dataTransfer.files) {
-        files.push(file.path);
-      }
-      window.electron.send(OPEN_WINDOW, { files });
-    },
     resizeWindow({ width, height }) {
       window.electron.send(RESIZE_WINDOW, {
         width,

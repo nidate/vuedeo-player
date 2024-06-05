@@ -91,7 +91,7 @@ app.on('ready', async () => {
   createMenu();
 
   if (initOpenFileQueue.length) {
-    initOpenFileQueue.forEach((file) => openWindow(file));
+    initOpenFileQueue.forEach((file) => openWindow({file}));
   } else {
     openWindow();
   }
