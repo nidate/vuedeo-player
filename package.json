@@ -22,8 +22,8 @@
     "dev": "vite",
     "build": "vite build && electron-builder",
     "serve": "vite preview",
-    "lint": "eslint --ext .js,.vue --ignore-path .gitignore src electron",
-    "pretty": "eslint --ext .js,.vue --ignore-path .gitignore --fix src electron"
+    "lint": "eslint",
+    "pretty": "eslint --fix"
   },
   "main": "dist-electron/main/index.js",
   "dependencies": {
@@ -31,11 +31,13 @@
     "hasha": "^6.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.4.0",
     "@vitejs/plugin-vue": "^5.0.5",
     "electron": "^30.0.9",
     "electron-builder": "^24.13.3",
     "eslint": "^9.4.0",
     "eslint-plugin-vue": "^9.26.0",
+    "globals": "^15.3.0",
     "video.js": "^8.12.0",
     "videojs-abloop": "^1.2.0",
     "videojs-hotkeys": "^0.2.28",
