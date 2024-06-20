@@ -1,36 +1,30 @@
-import globals from "globals";
-import pluginJs from "@eslint/js";
-import pluginVue from "eslint-plugin-vue";
-
+import globals from 'globals';
+import pluginJs from '@eslint/js';
+import pluginVue from 'eslint-plugin-vue';
+import eslintConfigPrettier from 'eslint-config-prettier';
 
 export default [
+  {
+    ignores: ['dist/**', 'dist-electron/**']
+  },
   ...pluginVue.configs['flat/recommended'],
   {
     ...pluginJs.configs.recommended,
-    ignores: ["dist/**","dist-electron/**"]
-  },
-  {
-    files: ["electron/**"],
     languageOptions: {
-      globals:  {
-        ...globals.node
-      }
-    },
-  },
-  {
-    files: ["src/**"],
-    languageOptions: {
-      globals:  {
-        ...globals.browser
-      }
-    },
-  },
-  {
-    files: ["vite.config.js"],
-    languageOptions: {
-      globals:  {
+      globals: {
         ...globals.node
       }
     }
+  },
+  {
+    files: ['src/**'],
+    languageOptions: {
+      globals: {
+        ...globals.browser
+      }
+    }
+  },
+  {
+    ...eslintConfigPrettier
   }
 ];
