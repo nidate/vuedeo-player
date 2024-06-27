@@ -48,7 +48,7 @@ export default {
             createButtons: true
           }
         }
-      },
+      }
     };
   },
   computed: {},

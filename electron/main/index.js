@@ -15,7 +15,15 @@
 
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { app, protocol, BrowserWindow, ipcMain, Menu, dialog, shell } from 'electron';
+import {
+  app,
+  protocol,
+  BrowserWindow,
+  ipcMain,
+  Menu,
+  dialog,
+  shell
+} from 'electron';
 const isDevelopment = process.env.NODE_ENV !== 'production';
 import {
   RESIZE_WINDOW,
@@ -91,7 +99,7 @@ app.on('ready', async () => {
   createMenu();
 
   if (initOpenFileQueue.length) {
-    initOpenFileQueue.forEach((file) => openWindow({file}));
+    initOpenFileQueue.forEach((file) => openWindow({ file }));
   } else {
     openWindow();
   }
@@ -251,7 +259,7 @@ function createMenu() {
         {
           label: 'Show in Finder',
           accelerator: 'Cmd+Option+Space',
-          click: function(item, win) {
+          click: function (item, win) {
             const filename = win.representedFilename;
             if (filename) {
               shell.showItemInFolder(filename);
