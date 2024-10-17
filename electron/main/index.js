@@ -49,6 +49,11 @@ const indexHtml = path.join(process.env.DIST, 'index.html');
 
 const store = new Store();
 
+// https://github.com/electron/electron/issues/43415#issuecomment-2407778540
+if (process.platform === 'darwin' && process.arch === 'x64') {
+  app.disableHardwareAcceleration();
+}
+
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true, stream: true } },
