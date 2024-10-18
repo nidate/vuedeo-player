@@ -1,12 +1,20 @@
 <template>
   <div class="video-player">
-    <video-player @resize-video="resizeWindow" @close-video="closeWindow" />
+    <video-player
+      @resize-video="resizeWindow"
+      @close-video="closeWindow"
+      @volume-down-another-window="volumeDownAnotherWindow"
+    />
   </div>
 </template>
 
 <script>
 import VideoPlayer from './components/VideoPlayer.vue';
-import { RESIZE_WINDOW, CLOSE_WINDOW } from './events';
+import {
+  RESIZE_WINDOW,
+  CLOSE_WINDOW,
+  VOLUME_DOWN_ANOTHER_WINDOW
+} from './events';
 
 export default {
   name: 'App',
@@ -25,6 +33,10 @@ export default {
     },
     closeWindow() {
       window.electron.send(CLOSE_WINDOW);
+    },
+    volumeDownAnotherWindow() {
+      console.log('send volumeDownAnotherWindow');
+      window.electron.send(VOLUME_DOWN_ANOTHER_WINDOW);
     }
   }
 };

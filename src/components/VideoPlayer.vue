@@ -13,7 +13,13 @@
 import videojs from 'video.js';
 import abLoopPlugin from 'videojs-abloop';
 import 'videojs-hotkeys';
-import { OPEN_WINDOW, OPEN_FILE, STORE_DATA } from '../events';
+import {
+  OPEN_WINDOW,
+  OPEN_FILE,
+  STORE_DATA,
+  VOLUME_DOWN_ANOTHER_WINDOW,
+  VOLUME_DOWN
+} from '../events';
 
 const STATE = {
   INIT: 'INIT',
@@ -21,10 +27,11 @@ const STATE = {
   LOADING: 'LOADING',
   ACTIVE: 'ACTIVE'
 };
+const VOLUME_RATE = 0.05;
 
 export default {
   name: 'VideoPlayer',
-  emits: ['resize-video', 'close-video'],
+  emits: ['resize-video', 'close-video', VOLUME_DOWN_ANOTHER_WINDOW],
   data() {
     return {
       state: STATE.INIT,
@@ -61,11 +68,8 @@ export default {
         alwaysCaptureHotkeys: true,
         enableNumbers: false,
         // override up, down
-        volumeUpKey: () => {
-          return false;
-        },
-        volumeDownKey: () => {
-          return false;
+        volumeDownKey: (e) => {
+          return ['-', '_'].includes(e.key);
         },
         forwardKey: (e) => {
           return ['ArrowUp', 'ArrowRight'].includes(e.key);
@@ -83,6 +87,18 @@ export default {
           return step * rate;
         },
         customKeys: {
+          volumeUpKey: {
+            key: (e) => {
+              return ['=', '+'].includes(e.key);
+            },
+            handler: (player) => {
+              let rate = VOLUME_RATE;
+              player.volume(player.volume() + rate);
+              if (player.volume() >= 1) {
+                this.$emit(VOLUME_DOWN_ANOTHER_WINDOW, rate);
+              }
+            }
+          },
           // change playback rate '[' ']' '\'
           // todo indicate current playback rate on the screen
           playbackRateUp: {
@@ -114,6 +130,7 @@ export default {
       });
       component.playerReady();
     });
+    window.electron.on(VOLUME_DOWN, this.volumeDown);
   },
   beforeUnmount() {
     if (this.player) {
@@ -180,6 +197,14 @@ export default {
     closeVideo() {
       this.savePosition();
       this.$emit('close-video', this);
+    },
+    volumeDown(e, rate) {
+      if (this.player) {
+        if (!rate) {
+          rate = VOLUME_RATE;
+        }
+        this.player.volume(this.player.volume() - rate);
+      }
     },
     keydown(e) {
       if (e.key === 'q') {

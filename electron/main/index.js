@@ -30,7 +30,9 @@ import {
   CLOSE_WINDOW,
   OPEN_FILE,
   STORE_DATA,
-  OPEN_WINDOW
+  OPEN_WINDOW,
+  VOLUME_DOWN_ANOTHER_WINDOW,
+  VOLUME_DOWN
 } from '../../src/events';
 import { hashFile } from 'hasha';
 import Store from 'electron-store';
@@ -220,6 +222,17 @@ ipcMain.on(STORE_DATA, (event, { hash, key, value }) => {
 ipcMain.on(OPEN_WINDOW, (event, { files }) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   openFiles({ win, files });
+});
+
+ipcMain.on(VOLUME_DOWN_ANOTHER_WINDOW, (event, rate) => {
+  const sourceWindow = BrowserWindow.fromWebContents(event.sender);
+  const anotherWindows = BrowserWindow.getAllWindows();
+  // send VOLUME_DOWN event to another window
+  for (const window of anotherWindows) {
+    if (window.id !== sourceWindow.id) {
+      window.webContents.send(VOLUME_DOWN, rate);
+    }
+  }
 });
 
 function createMenu() {
