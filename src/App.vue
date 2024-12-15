@@ -35,7 +35,6 @@ export default {
       window.electron.send(CLOSE_WINDOW);
     },
     volumeDownAnotherWindow() {
-      console.log('send volumeDownAnotherWindow');
       window.electron.send(VOLUME_DOWN_ANOTHER_WINDOW);
     }
   }

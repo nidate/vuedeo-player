@@ -14,7 +14,6 @@ import videojs from 'video.js';
 import abLoopPlugin from 'videojs-abloop';
 import 'videojs-hotkeys';
 import {
-  OPEN_WINDOW,
   OPEN_FILE,
   STORE_DATA,
   VOLUME_DOWN_ANOTHER_WINDOW,
@@ -142,11 +141,14 @@ export default {
       e.preventDefault();
       e.stopPropagation();
       this.savePosition();
-      const files = [];
-      for (const file of e.dataTransfer.files) {
-        files.push(file.path);
+      if (e.dataTransfer.files && e.dataTransfer.files.length) {
+        // e.dataTransfer.filesをcontextBridgeに渡すとObjectに変換されlengthプロパティがなくなる。
+        const files = [];
+        for (let i = 0; i < e.dataTransfer.files.length; i++) {
+          files.push(e.dataTransfer.files.item(i));
+        }
+        window.electron.openWindow({ files });
       }
-      window.electron.send(OPEN_WINDOW, { files });
     },
     // called after videojs initialized
     playerReady() {
