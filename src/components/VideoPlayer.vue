@@ -40,6 +40,9 @@ export default {
       hash: null,
       fileInfo: {},
       startTime: 0,
+      playbackRate: 1,
+      seekUntil: 0, // 指定秒になるまで早送り再生する
+      seekRate: 3,
       options: {
         autoplay: 'play',
         fluid: true,
@@ -70,16 +73,17 @@ export default {
         volumeDownKey: (e) => {
           return ['-', '_'].includes(e.key);
         },
+        volumeUpKey: () => {},
         forwardKey: (e) => {
-          return ['ArrowUp', 'ArrowRight'].includes(e.key);
+          return ['ArrowRight'].includes(e.key);
         },
         rewindKey: (e) => {
-          return ['ArrowDown', 'ArrowLeft'].includes(e.key);
+          return ['ArrowLeft', 'ArrowUp'].includes(e.key);
         },
         seekStep: (e) => {
           const step = 5;
           // seek step up
-          if (e.key === 'ArrowUp' || e.which === 'ArrowDown') {
+          if (e.key === 'ArrowUp') {
             return step * 3;
           }
           const rate = this.player.playbackRate() || 1;
@@ -124,8 +128,20 @@ export default {
             handler: (player) => {
               player.playbackRate(1);
             }
+          },
+          // 一定時間早送り
+          seekForward: {
+            key: (e) => {
+              return ['ArrowDown'].includes(e.key);
+            },
+            handler: () => {
+              component.smoothSeek(15);
+            }
           }
         }
+      });
+      this.player.on('timeupdate', () => {
+        component.restorePlaybackRate();
       });
       component.playerReady();
     });
@@ -232,6 +248,33 @@ export default {
         return;
       }
       return true;
+    },
+    // 一定時間早送りにする
+    smoothSeek(rate) {
+      if (!rate || !this.player) {
+        return;
+      }
+      if (this.seekUntil === 0) {
+        this.playbackRate = this.player.playbackRate();
+      } else {
+        this.player.currentTime(this.seekUntil);
+      }
+      this.seekUntil = this.player.currentTime() + rate;
+      this.player.currentTime(this.player.currentTime() + rate / 2);
+      this.player.playbackRate(rate);
+    },
+    restorePlaybackRate() {
+      if (this.seekUntil) {
+        const currentTime = this.player.currentTime();
+        const rate = this.player.playbackRate();
+        if (
+          (rate > 0 && this.seekUntil < currentTime) ||
+          (rate < 0 && this.seekUntil > currentTime)
+        ) {
+          this.seekUntil = 0;
+          this.player.playbackRate(this.playbackRate);
+        }
+      }
     }
   }
 };
