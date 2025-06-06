@@ -75,18 +75,26 @@ export default {
         },
         volumeUpKey: () => {},
         forwardKey: (e) => {
-          return ['ArrowRight'].includes(e.key);
+          if (['ArrowRight'].includes(e.key)) {
+            component.restorePlaybackRate(true);
+            return true;
+          }
+          return false;
         },
         rewindKey: (e) => {
-          return ['ArrowLeft', 'ArrowUp'].includes(e.key);
+          if (['ArrowLeft', 'ArrowUp'].includes(e.key)) {
+            component.restorePlaybackRate(true);
+            return true;
+          }
+          return false;
         },
         seekStep: (e) => {
-          const step = 5;
+          let step = 5;
           // seek step up
           if (e.key === 'ArrowUp') {
-            return step * 3;
+            step = step * 3;
           }
-          const rate = this.player.playbackRate() || 1;
+          const rate = this.playbackRate || 1;
           return step * rate;
         },
         customKeys: {
@@ -109,6 +117,7 @@ export default {
               return e.key === '\\';
             },
             handler: (player) => {
+              component.restorePlaybackRate(true);
               let rate = Math.round(player.playbackRate() * 100) + 10;
               player.playbackRate(rate / 100);
             }
@@ -116,6 +125,7 @@ export default {
           playbackRateDown: {
             key: (e) => e.key === '[',
             handler: (player) => {
+              component.restorePlaybackRate(true);
               let rate = Math.round(player.playbackRate() * 100) - 10;
               if (rate <= 0) {
                 rate = player.playbackRate();
@@ -126,6 +136,7 @@ export default {
           playbackRateReset: {
             key: (e) => e.key === ']',
             handler: (player) => {
+              component.restorePlaybackRate(true);
               player.playbackRate(1);
             }
           },
@@ -256,16 +267,18 @@ export default {
       }
       if (this.seekUntil === 0) {
         this.playbackRate = this.player.playbackRate();
+        this.seekUntil = this.player.currentTime() + rate;
       } else {
-        this.player.currentTime(this.seekUntil);
+        this.seekUntil = this.seekUntil + rate;
       }
-      this.seekUntil = this.player.currentTime() + rate;
-      this.player.currentTime(this.player.currentTime() + rate / 2);
       this.player.playbackRate(rate);
     },
-    restorePlaybackRate() {
+    restorePlaybackRate(force) {
       if (this.seekUntil) {
         const currentTime = this.player.currentTime();
+        if (force) {
+          this.seekUntil = currentTime - 1;
+        }
         const rate = this.player.playbackRate();
         if (
           (rate > 0 && this.seekUntil < currentTime) ||
