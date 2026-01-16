@@ -88,6 +88,16 @@ export default {
           }
           return false;
         },
+        playPauseKey: (e) => {
+          if (e.key === ' ') {
+            const seeking = component.seekUntil;
+            component.restorePlaybackRate(true);
+            if (seeking) {
+              return false;
+            }
+            return true;
+          }
+        },
         seekStep: (e) => {
           let step = 5;
           // seek step up
@@ -143,10 +153,20 @@ export default {
           // 一定時間早送り
           seekForward: {
             key: (e) => {
-              return ['ArrowDown'].includes(e.key);
+              return ['ArrowDown', 'z', 'x', 'c', 'v', 'b'].includes(e.key);
             },
-            handler: () => {
-              component.smoothSeek(15);
+            handler: (player, options, e) => {
+              if (e.key == 'z') {
+                component.smoothSeek(1.5, 5);
+              } else if (e.key == 'x') {
+                component.smoothSeek(3, 15);
+              } else if (e.key == 'c') {
+                component.smoothSeek(6, 18);
+              } else if (e.key == 'v') {
+                component.smoothSeek(10, 30);
+              } else if (['ArrowDown', 'b'].includes(e.key)) {
+                component.smoothSeek(15, 45);
+              }
             }
           }
         }
@@ -261,15 +281,22 @@ export default {
       return true;
     },
     // 一定時間早送りにする
-    smoothSeek(rate) {
+    smoothSeek(rate, second) {
       if (!rate || !this.player) {
         return;
       }
+      if (!second) {
+        second = rate;
+      }
       if (this.seekUntil === 0) {
         this.playbackRate = this.player.playbackRate();
-        this.seekUntil = this.player.currentTime() + rate;
+        this.seekUntil = this.player.currentTime() + second;
       } else {
-        this.seekUntil = this.seekUntil + rate;
+        if (this.player.playbackRate() == rate) {
+          this.seekUntil = this.seekUntil + second;
+        } else {
+          this.seekUntil = this.player.currentTime() + second;
+        }
       }
       this.player.playbackRate(rate);
     },
