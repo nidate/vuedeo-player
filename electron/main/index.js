@@ -49,7 +49,11 @@ const preload = path.join(__dirname, '../preload/index.js');
 const url = process.env.VITE_DEV_SERVER_URL;
 const indexHtml = path.join(process.env.DIST, 'index.html');
 
-const store = new Store();
+const storeConfig = {};
+if (isDevelopment) {
+  storeConfig.name = 'dev';
+}
+const store = new Store(storeConfig);
 
 // https://github.com/electron/electron/issues/43415#issuecomment-2407778540
 if (process.platform === 'darwin' && process.arch === 'x64') {
