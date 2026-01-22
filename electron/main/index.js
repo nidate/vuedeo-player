@@ -32,7 +32,8 @@ import {
   STORE_DATA,
   OPEN_WINDOW,
   VOLUME_DOWN_ANOTHER_WINDOW,
-  VOLUME_DOWN
+  VOLUME_DOWN,
+  SET_WINDOW_TITLE
 } from '../../src/events';
 import { hashFile } from 'hasha';
 import Store from 'electron-store';
@@ -162,7 +163,7 @@ function registerLocalResourceProtocol() {
 /**
  * create the browser window and send open event to that window.
  */
-async function openWindow({ win, file } = {}) {
+async function openWindow({ win, file, hash } = {}) {
   if (!win) {
     win = new BrowserWindow({
       width: 640,
@@ -174,32 +175,37 @@ async function openWindow({ win, file } = {}) {
         preload
       }
     });
+    if (process.env.VITE_DEV_SERVER_URL) {
+      await win.loadURL(url);
+      win.webContents.openDevTools();
+    } else {
+      await win.loadFile(indexHtml);
+    }
   }
 
-  if (process.env.VITE_DEV_SERVER_URL) {
-    await win.loadURL(url);
-    win.webContents.openDevTools();
-  } else {
-    await win.loadFile(indexHtml);
-  }
   if (!file) {
     return win;
   }
 
   // get file information
   const basename = path.basename(file);
-  const hash = await hashFile(file);
+  if (!hash) {
+    hash = await hashFile(file);
+  }
   const fileInfo = store.get(hash, {});
   fileInfo.name = basename;
   store.set(hash, fileInfo);
 
   const mimeType = getMimeType(file);
+  // call load() on VideoPlayer component
   win.webContents.send(OPEN_FILE, { file, hash, fileInfo, mimeType });
-  win.setTitle(basename);
-  win.setRepresentedFilename(file);
-  win.setDocumentEdited(true);
-
+  setWindowTitle(win, file, fileInfo.name);
   return win;
+}
+
+function setWindowTitle(win, file, name) {
+  win.setTitle(name);
+  win.setRepresentedFilename(file);
 }
 
 ipcMain.on(RESIZE_WINDOW, (event, { width, height, marginHeight = 0 }) => {
@@ -226,6 +232,10 @@ ipcMain.on(STORE_DATA, (event, { hash, key, value }) => {
 ipcMain.on(OPEN_WINDOW, (event, { files }) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   openFiles({ win, files });
+});
+ipcMain.on(SET_WINDOW_TITLE, (event, { file, name }) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  setWindowTitle(win, file, name);
 });
 
 ipcMain.on(VOLUME_DOWN_ANOTHER_WINDOW, (event, rate) => {

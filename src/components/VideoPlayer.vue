@@ -17,7 +17,8 @@ import {
   OPEN_FILE,
   STORE_DATA,
   VOLUME_DOWN_ANOTHER_WINDOW,
-  VOLUME_DOWN
+  VOLUME_DOWN,
+  SET_WINDOW_TITLE
 } from '../events';
 
 const STATE = {
@@ -39,6 +40,7 @@ export default {
       file: null,
       hash: null,
       fileInfo: {},
+      mimeType: null,
       startTime: 0,
       playbackRate: 1,
       seekUntil: 0, // 指定秒になるまで早送り再生する
@@ -57,7 +59,9 @@ export default {
             createButtons: true
           }
         }
-      }
+      },
+      history: [],
+      historyIndex: 0
     };
   },
   computed: {},
@@ -194,7 +198,50 @@ export default {
         for (let i = 0; i < e.dataTransfer.files.length; i++) {
           files.push(e.dataTransfer.files.item(i));
         }
+        // send OPEN_WINDOW event on electron/preload/index.js
         window.electron.openWindow({ files });
+      }
+    },
+    pushHistory() {
+      if (
+        this.player &&
+        this.file &&
+        !this.history.find((h) => h.hash === this.hash)
+      ) {
+        this.history.push({
+          hash: this.hash,
+          file: this.file,
+          fileInfo: this.fileInfo,
+          mimeType: this.mimeType
+        });
+      }
+    },
+    updateHistory() {
+      if (this.player && this.file) {
+        this.player.pause();
+        this.savePosition();
+        this.history[this.historyIndex].fileInfo.position =
+          this.player.currentTime();
+      }
+    },
+    changeHistory() {
+      const { hash, file, fileInfo, mimeType } =
+        this.history[this.historyIndex];
+      window.electron.send(SET_WINDOW_TITLE, { file, name: fileInfo.name });
+      this.load({ file, hash, fileInfo, mimeType });
+    },
+    historyBack() {
+      if (this.historyIndex + 1 < this.history.length) {
+        this.updateHistory();
+        this.historyIndex += 1;
+        this.changeHistory();
+      }
+    },
+    historyForward() {
+      if (this.historyIndex > 0) {
+        this.updateHistory();
+        this.historyIndex -= 1;
+        this.changeHistory();
       }
     },
     // called after videojs initialized
@@ -229,9 +276,11 @@ export default {
       this.file = file;
       this.hash = hash;
       this.fileInfo = fileInfo;
+      this.mimeType = mimeType;
       this.startTime = fileInfo.position;
       this.player.src({ src: `local-resource://${file}`, mimeType });
       this.player.load();
+      this.pushHistory();
     },
     savePosition() {
       if (!this.hash || !this.player) {
@@ -277,6 +326,14 @@ export default {
           height: this.originalSize.height * 2
         });
         return;
+      } else if (e.key === ';') {
+        e.preventDefault();
+        this.historyBack();
+        return false;
+      } else if (e.key === "'") {
+        e.preventDefault();
+        this.historyForward();
+        return false;
       }
       return true;
     },
