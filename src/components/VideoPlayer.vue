@@ -1,12 +1,17 @@
 <template>
-  <div @keydown="keydown">
-    <video
-      ref="videoPlayer"
-      class="video-js"
-      @drop="dropFiles"
-      @dragenter.prevent
-      @dragover.prevent
-    />
+  <div class="parent">
+    <div @keydown="keydown">
+      <video
+        ref="videoPlayer"
+        class="video-js"
+        @drop="dropFiles"
+        @dragenter.prevent
+        @dragover.prevent
+      />
+    </div>
+    <div v-show='seekbarActive' class="thumb">
+      <video ref="thumbnail" :src="resourceUrl" />
+    </div>
   </div>
 </template>
 <script>
@@ -61,10 +66,19 @@ export default {
         }
       },
       history: [],
-      historyIndex: 0
+      historyIndex: 0,
+      seekbarActive: false,
+      seekTime: 0
     };
   },
-  computed: {},
+  computed: {
+    resourceUrl() {
+      if (this.file) {
+        return `local-resource://${this.file}`;
+      }
+      return '';
+    }
+  },
   mounted() {
     const component = this;
     abLoopPlugin(window, videojs);
@@ -250,6 +264,20 @@ export default {
       this.player.on('loadeddata', () => {
         this.loadedData();
       });
+      const progressControl = this.player
+        .getChild('ControlBar')
+      ?.getChild('ProgressControl');
+      const seekbar = progressControl?.getChild('SeekBar');
+      if (seekbar) {
+        seekbar.on('mousemove', (e) => {
+          this.seekbarActive = true;
+          this.seekTime = seekbar.calculateDistance(e) * seekbar.player_.duration();
+          this.setThumbnail(this.seekTime);
+        });
+        progressControl.on('mouseleave', () => {
+          this.seekbarActive = false;
+        });
+      }
       window.electron.on(OPEN_FILE, this.load);
     },
     loadedData() {
@@ -278,7 +306,7 @@ export default {
       this.fileInfo = fileInfo;
       this.mimeType = mimeType;
       this.startTime = fileInfo.position;
-      this.player.src({ src: `local-resource://${file}`, mimeType });
+      this.player.src({ src: this.resourceUrl, mimeType });
       this.player.load();
       this.pushHistory();
     },
@@ -372,8 +400,25 @@ export default {
           this.player.playbackRate(this.playbackRate);
         }
       }
+    },
+    setThumbnail(time) {
+      this.$refs.thumbnail.currentTime = time;
     }
   }
 };
 </script>
 <style src="video.js/dist/video-js.css"></style>
+<style>
+.thumb {
+  position: absolute;
+  bottom: 30px;
+  right: 0px;
+  height: 80px;
+  color: white;
+  opacity: 80%;
+  background-color: rgb(255 255 255 / 40%);
+}
+.thumb video {
+  height: inherit;
+}
+</style>
