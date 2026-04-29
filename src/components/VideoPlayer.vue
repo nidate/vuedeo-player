@@ -9,7 +9,7 @@
         @dragover.prevent
       />
     </div>
-    <div v-show='seekbarActive' class="thumb">
+    <div v-show="seekbarActive" class="thumb">
       <video ref="thumbnail" :src="resourceUrl" />
     </div>
   </div>
@@ -266,12 +266,13 @@ export default {
       });
       const progressControl = this.player
         .getChild('ControlBar')
-      ?.getChild('ProgressControl');
+        ?.getChild('ProgressControl');
       const seekbar = progressControl?.getChild('SeekBar');
       if (seekbar) {
-        seekbar.on('mousemove', (e) => {
+        progressControl.on('mousemove', (e) => {
           this.seekbarActive = true;
-          this.seekTime = seekbar.calculateDistance(e) * seekbar.player_.duration();
+          this.seekTime =
+            seekbar.calculateDistance(e) * seekbar.player_.duration();
           this.setThumbnail(this.seekTime);
         });
         progressControl.on('mouseleave', () => {
