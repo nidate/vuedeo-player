@@ -414,12 +414,14 @@ export default {
   position: absolute;
   bottom: 30px;
   right: 0px;
-  height: 80px;
+  width: 30%;
+  height: 30%;
   color: white;
-  opacity: 80%;
+  opacity: 90%;
   background-color: rgb(255 255 255 / 40%);
 }
 .thumb video {
-  height: inherit;
+  width: 100%;
+  height: 100%;
 }
 </style>
